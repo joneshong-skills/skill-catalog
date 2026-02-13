@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Graph Explorer</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; overflow: hidden; }
+
+  /* Layout */
+  #app { display: flex; height: 100vh; }
+  #sidebar { width: 340px; background: #161b22; border-right: 1px solid #30363d; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  #graph-container { flex: 1; position: relative; }
+
+  /* Sidebar */
+  .sidebar-header { padding: 16px; border-bottom: 1px solid #30363d; }
+  .sidebar-header h1 { font-size: 18px; font-weight: 600; color: #f0f6fc; margin-bottom: 8px; }
+  .search-box { width: 100%; padding: 8px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 14px; outline: none; }
+  .search-box:focus { border-color: #58a6ff; }
+  .stats-bar { padding: 8px 16px; font-size: 12px; color: #8b949e; border-bottom: 1px solid #30363d; display: flex; gap: 12px; }
+  .stats-bar span { white-space: nowrap; }
+
+  /* Filter pills */
+  .filters { padding: 10px 16px; border-bottom: 1px solid #30363d; display: flex; flex-wrap: wrap; gap: 4px; }
+  .filter-pill { padding: 2px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid #30363d; background: transparent; color: #8b949e; transition: all .15s; }
+  .filter-pill.active { color: #f0f6fc; border-color: transparent; }
+  .filter-pill:hover { opacity: .85; }
+
+  /* Skill list */
+  .skill-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .skill-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: background .12s; }
+  .skill-item:hover { background: #21262d; }
+  .skill-item.selected { background: #1f6feb33; }
+  .skill-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .skill-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .skill-version { font-size: 11px; color: #484f58; }
+
+  /* Detail panel */
+  #detail-panel { position: absolute; top: 16px; right: 16px; width: 360px; max-height: calc(100vh - 32px); background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  #detail-panel.visible { display: block; }
+  .detail-close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; line-height: 1; }
+  .detail-close:hover { color: #f0f6fc; }
+  .detail-title { font-size: 20px; font-weight: 700; color: #f0f6fc; margin-bottom: 4px; }
+  .detail-version { font-size: 12px; color: #484f58; margin-bottom: 12px; }
+  .detail-section { margin-bottom: 14px; }
+  .detail-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #8b949e; margin-bottom: 6px; }
+  .detail-section p { font-size: 13px; line-height: 1.5; color: #c9d1d9; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 2px; border: 1px solid #30363d; color: #c9d1d9; }
+  .trigger-tag { background: #1f6feb22; border-color: #1f6feb55; color: #79c0ff; }
+  .strength-tag { background: #23882322; border-color: #23882355; color: #7ee787; }
+  .domain-tag { border-color: transparent; color: #f0f6fc; font-weight: 500; }
+  .connections-list { list-style: none; padding: 0; }
+  .connections-list li { padding: 4px 0; font-size: 12px; color: #8b949e; cursor: pointer; }
+  .connections-list li:hover { color: #58a6ff; }
+  .conn-type { font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+  .conn-pipeline { background: #1f6feb33; color: #79c0ff; }
+  .conn-enhancement { background: #23882333; color: #7ee787; }
+  .conn-domain { background: #484f5833; color: #8b949e; }
+
+  /* Legend */
+  #legend { position: absolute; bottom: 16px; left: 16px; background: #161b22ee; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; font-size: 11px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .legend-item:last-child { margin-bottom: 0; }
+  .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-line { width: 24px; height: 0; border-top: 2px solid; }
+  .legend-line.dashed { border-top-style: dashed; }
+  .legend-line.thick { border-top-width: 3px; }
+
+  /* Tooltip */
+  .tooltip { position: absolute; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; padding: 6px 10px; font-size: 12px; pointer-events: none; display: none; z-index: 100; white-space: nowrap; }
+
+  /* SVG */
+  svg { width: 100%; height: 100%; }
+  .link { fill: none; stroke-opacity: .4; }
+  .link-pipeline { stroke: #58a6ff; stroke-width: 1.5; }
+  .link-enhancement { stroke: #7ee787; stroke-width: 1; stroke-dasharray: 5,3; }
+  .link-shares-domain { stroke: #484f58; stroke-width: .8; stroke-dasharray: 2,4; }
+  .node-label { fill: #c9d1d9; font-size: 10px; text-anchor: middle; pointer-events: none; }
+  .node circle { stroke-width: 2; cursor: pointer; transition: r .15s; }
+  .node circle:hover { stroke-width: 3; }
+  .node.highlighted circle { stroke-width: 3; filter: drop-shadow(0 0 6px rgba(88,166,255,.5)); }
+  .node.dimmed { opacity: .15; }
+  .link.dimmed { opacity: .05; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h1>Skill Graph Explorer</h1>
+      <input type="text" class="search-box" placeholder="Search skills..." id="search">
+    </div>
+    <div class="stats-bar" id="stats"></div>
+    <div class="filters" id="filters"></div>
+    <div class="skill-list" id="skill-list"></div>
+  </div>
+  <div id="graph-container">
+    <svg id="graph"></svg>
+    <div id="detail-panel">
+      <button class="detail-close" id="detail-close">&times;</button>
+      <div id="detail-content"></div>
+    </div>
+    <div id="legend"></div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
+<script>
+// ── Data injection ──────────────────────────────────────────────────────────
+const graphData = /*__GRAPH_DATA__*/{nodes:[],edges:[],compositions:[],stats:{}};
+const catalogData = /*__CATALOG_DATA__*/[];
+
+// ── Domain colors ───────────────────────────────────────────────────────────
+const DOMAIN_COLORS = {
+  "content-creation": "#2f9e44",
+  "document-output":  "#e67700",
+  "visual-design":    "#7c3aed",
+  "dev-tooling":      "#3b82f6",
+  "orchestration":    "#0891b2",
+  "knowledge-mgmt":   "#ca8a04",
+  "skill-meta":       "#6b7280",
+  "analysis":         "#dc2626",
+  "ideation":         "#eab308",
+  "general":          "#6b7280",
+};
+
+// ── State ───────────────────────────────────────────────────────────────────
+let selectedNode = null;
+let activeDomains = new Set();
+
+// ── Build data structures ───────────────────────────────────────────────────
+const catalogMap = {};
+catalogData.forEach(c => catalogMap[c.name] = c);
+
+const nodes = graphData.nodes.map(n => ({
+  ...n,
+  radius: Math.max(8, Math.min(22, 8 + (graphData.edges.filter(e =>
+    e.source === n.id || e.target === n.id
+  ).length) * 1.5)),
+  color: DOMAIN_COLORS[n.domains?.[0]] || DOMAIN_COLORS.general,
+}));
+
+const nodeMap = {};
+nodes.forEach(n => nodeMap[n.id] = n);
+
+const links = graphData.edges.filter(e =>
+  nodeMap[e.source] && nodeMap[e.target]
+).map(e => ({
+  source: e.source,
+  target: e.target,
+  type: e.type,
+  description: e.description,
+  strength: e.strength || .5,
+}));
+
+// ── Stats bar ───────────────────────────────────────────────────────────────
+document.getElementById("stats").innerHTML =
+  `<span>${nodes.length} skills</span>` +
+  `<span>${links.length} edges</span>` +
+  `<span>${graphData.compositions?.length || 0} combos</span>`;
+
+// ── Domain filter pills ─────────────────────────────────────────────────────
+const allDomains = [...new Set(nodes.flatMap(n => n.domains || []))].sort();
+const filtersEl = document.getElementById("filters");
+allDomains.forEach(domain => {
+  const pill = document.createElement("button");
+  pill.className = "filter-pill";
+  pill.textContent = domain;
+  pill.style.background = DOMAIN_COLORS[domain] + "33";
+  pill.style.borderColor = DOMAIN_COLORS[domain] + "55";
+  pill.style.color = DOMAIN_COLORS[domain];
+  pill.addEventListener("click", () => {
+    if (activeDomains.has(domain)) {
+      activeDomains.delete(domain);
+      pill.classList.remove("active");
+      pill.style.background = DOMAIN_COLORS[domain] + "33";
+    } else {
+      activeDomains.add(domain);
+      pill.classList.add("active");
+      pill.style.background = DOMAIN_COLORS[domain];
+      pill.style.color = "#fff";
+    }
+    applyFilters();
+  });
+  filtersEl.appendChild(pill);
+});
+
+// ── Skill list ──────────────────────────────────────────────────────────────
+const skillListEl = document.getElementById("skill-list");
+function renderSkillList(filter = "") {
+  skillListEl.innerHTML = "";
+  const filtered = nodes
+    .filter(n => {
+      if (filter && !n.id.toLowerCase().includes(filter.toLowerCase())) return false;
+      if (activeDomains.size > 0 && !n.domains?.some(d => activeDomains.has(d))) return false;
+      return true;
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  filtered.forEach(n => {
+    const item = document.createElement("div");
+    item.className = "skill-item" + (selectedNode === n.id ? " selected" : "");
+    item.innerHTML = `<span class="skill-dot" style="background:${n.color}"></span>` +
+      `<span class="skill-name">${n.id}</span>` +
+      `<span class="skill-version">${n.version || ""}</span>`;
+    item.addEventListener("click", () => selectNode(n.id));
+    skillListEl.appendChild(item);
+  });
+}
+renderSkillList();
+
+document.getElementById("search").addEventListener("input", e => {
+  renderSkillList(e.target.value);
+});
+
+// ── D3 Graph ────────────────────────────────────────────────────────────────
+const container = document.getElementById("graph-container");
+const width = container.clientWidth;
+const height = container.clientHeight;
+const svg = d3.select("#graph");
+const g = svg.append("g");
+
+// Zoom
+const zoom = d3.zoom()
+  .scaleExtent([.2, 5])
+  .on("zoom", e => g.attr("transform", e.transform));
+svg.call(zoom);
+
+// Arrow markers
+const defs = svg.append("defs");
+["pipeline", "enhancement", "shares-domain"].forEach(type => {
+  defs.append("marker")
+    .attr("id", `arrow-${type}`)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 20).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-4L10,0L0,4")
+    .attr("fill", type === "pipeline" ? "#58a6ff" :
+                  type === "enhancement" ? "#7ee787" : "#484f58")
+    .attr("fill-opacity", .5);
+});
+
+// Links
+const linkG = g.append("g").attr("class", "links");
+const link = linkG.selectAll("line")
+  .data(links).join("line")
+  .attr("class", d => `link link-${d.type}`)
+  .attr("marker-end", d => `url(#arrow-${d.type})`);
+
+// Nodes
+const nodeG = g.append("g").attr("class", "nodes");
+const node = nodeG.selectAll("g")
+  .data(nodes).join("g")
+  .attr("class", "node")
+  .call(d3.drag()
+    .on("start", dragStart)
+    .on("drag", dragging)
+    .on("end", dragEnd));
+
+node.append("circle")
+  .attr("r", d => d.radius)
+  .attr("fill", d => d.color + "33")
+  .attr("stroke", d => d.color);
+
+node.append("text")
+  .attr("class", "node-label")
+  .attr("dy", d => d.radius + 14)
+  .text(d => d.id);
+
+// Tooltip
+const tooltip = document.getElementById("tooltip");
+node.on("mouseover", (e, d) => {
+  tooltip.style.display = "block";
+  tooltip.textContent = d.id + (d.version ? ` v${d.version}` : "");
+  tooltip.style.left = (e.pageX + 12) + "px";
+  tooltip.style.top = (e.pageY - 8) + "px";
+}).on("mousemove", e => {
+  tooltip.style.left = (e.pageX + 12) + "px";
+  tooltip.style.top = (e.pageY - 8) + "px";
+}).on("mouseout", () => {
+  tooltip.style.display = "none";
+}).on("click", (e, d) => {
+  e.stopPropagation();
+  selectNode(d.id);
+});
+
+svg.on("click", () => {
+  selectedNode = null;
+  clearHighlight();
+  hideDetail();
+  renderSkillList(document.getElementById("search").value);
+});
+
+// Simulation
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(120).strength(d => d.strength * .3))
+  .force("charge", d3.forceManyBody().strength(-300))
+  .force("center", d3.forceCenter(width / 2, height / 2))
+  .force("collision", d3.forceCollide().radius(d => d.radius + 10))
+  .on("tick", () => {
+    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+// Drag handlers
+function dragStart(e, d) {
+  if (!e.active) simulation.alphaTarget(.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragging(e, d) { d.fx = e.x; d.fy = e.y; }
+function dragEnd(e, d) {
+  if (!e.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// ── Interaction ─────────────────────────────────────────────────────────────
+function selectNode(id) {
+  selectedNode = id;
+  highlightNode(id);
+  showDetail(id);
+  renderSkillList(document.getElementById("search").value);
+
+  // Center on node
+  const n = nodes.find(n => n.id === id);
+  if (n) {
+    const transform = d3.zoomTransform(svg.node());
+    const x = -n.x * transform.k + width / 2;
+    const y = -n.y * transform.k + height / 2;
+    svg.transition().duration(400).call(
+      zoom.transform, d3.zoomIdentity.translate(x, y).scale(transform.k)
+    );
+  }
+}
+
+function highlightNode(id) {
+  const connected = new Set();
+  connected.add(id);
+  links.forEach(l => {
+    const sid = typeof l.source === "object" ? l.source.id : l.source;
+    const tid = typeof l.target === "object" ? l.target.id : l.target;
+    if (sid === id) connected.add(tid);
+    if (tid === id) connected.add(sid);
+  });
+
+  node.classed("highlighted", d => d.id === id)
+      .classed("dimmed", d => !connected.has(d.id));
+  link.classed("dimmed", d => {
+    const sid = typeof d.source === "object" ? d.source.id : d.source;
+    const tid = typeof d.target === "object" ? d.target.id : d.target;
+    return sid !== id && tid !== id;
+  });
+}
+
+function clearHighlight() {
+  node.classed("highlighted", false).classed("dimmed", false);
+  link.classed("dimmed", false);
+}
+
+function applyFilters() {
+  if (activeDomains.size === 0) {
+    node.style("display", null);
+    link.style("display", null);
+  } else {
+    node.style("display", d =>
+      d.domains?.some(dom => activeDomains.has(dom)) ? null : "none"
+    );
+    link.style("display", d => {
+      const sid = typeof d.source === "object" ? d.source.id : d.source;
+      const tid = typeof d.target === "object" ? d.target.id : d.target;
+      const sn = nodeMap[sid], tn = nodeMap[tid];
+      const sv = sn?.domains?.some(dom => activeDomains.has(dom));
+      const tv = tn?.domains?.some(dom => activeDomains.has(dom));
+      return (sv && tv) ? null : "none";
+    });
+  }
+  renderSkillList(document.getElementById("search").value);
+}
+
+// ── Detail panel ────────────────────────────────────────────────────────────
+const detailPanel = document.getElementById("detail-panel");
+const detailContent = document.getElementById("detail-content");
+document.getElementById("detail-close").addEventListener("click", () => {
+  hideDetail();
+  selectedNode = null;
+  clearHighlight();
+  renderSkillList(document.getElementById("search").value);
+});
+
+function hideDetail() { detailPanel.classList.remove("visible"); }
+
+function showDetail(id) {
+  const n = nodeMap[id];
+  const cat = catalogMap[id] || {};
+  if (!n) return;
+
+  // Find connections
+  const connections = [];
+  links.forEach(l => {
+    const sid = typeof l.source === "object" ? l.source.id : l.source;
+    const tid = typeof l.target === "object" ? l.target.id : l.target;
+    if (sid === id) connections.push({ target: tid, type: l.type, desc: l.description, dir: "out" });
+    if (tid === id) connections.push({ target: sid, type: l.type, desc: l.description, dir: "in" });
+  });
+
+  let html = `<div class="detail-title">${n.id}</div>`;
+  html += `<div class="detail-version">v${n.version || "?"} &middot; ${n.body_lines || "?"} lines</div>`;
+
+  // Domains
+  if (n.domains?.length) {
+    html += `<div class="detail-section"><h3>Domains</h3><div>`;
+    n.domains.forEach(d => {
+      html += `<span class="tag domain-tag" style="background:${DOMAIN_COLORS[d] || DOMAIN_COLORS.general}88">${d}</span>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Pain point
+  const pp = cat.pain_point || n.pain_point || n.description;
+  if (pp) html += `<div class="detail-section"><h3>Purpose</h3><p>${pp}</p></div>`;
+
+  // Strengths
+  const strengths = cat.strengths || n.strengths || [];
+  if (strengths.length) {
+    html += `<div class="detail-section"><h3>Strengths</h3><div>`;
+    strengths.forEach(s => html += `<span class="tag strength-tag">${s}</span>`);
+    html += `</div></div>`;
+  }
+
+  // Triggers
+  const triggers = cat.triggers || n.triggers || [];
+  if (triggers.length) {
+    html += `<div class="detail-section"><h3>Triggers</h3><div>`;
+    triggers.forEach(t => html += `<span class="tag trigger-tag">"${t}"</span>`);
+    html += `</div></div>`;
+  }
+
+  // Tools
+  if (n.tools?.length) {
+    html += `<div class="detail-section"><h3>Tools</h3><div>`;
+    n.tools.forEach(t => html += `<span class="tag">${t}</span>`);
+    html += `</div></div>`;
+  }
+
+  // Connections
+  if (connections.length) {
+    html += `<div class="detail-section"><h3>Connections (${connections.length})</h3><ul class="connections-list">`;
+    connections.forEach(c => {
+      const typeClass = c.type === "pipeline" ? "conn-pipeline" :
+                        c.type === "enhancement" ? "conn-enhancement" : "conn-domain";
+      const arrow = c.dir === "out" ? "→" : "←";
+      html += `<li onclick="selectNode('${c.target}')">${arrow} ${c.target} <span class="conn-type ${typeClass}">${c.type}</span></li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  detailContent.innerHTML = html;
+  detailPanel.classList.add("visible");
+}
+
+// Make selectNode globally accessible for onclick handlers
+window.selectNode = selectNode;
+
+// ── Legend ───────────────────────────────────────────────────────────────────
+const legendEl = document.getElementById("legend");
+legendEl.innerHTML = `
+  <div style="font-weight:600;margin-bottom:6px;color:#f0f6fc">Edge Types</div>
+  <div class="legend-item"><div class="legend-line" style="border-color:#58a6ff"></div> Pipeline</div>
+  <div class="legend-item"><div class="legend-line dashed" style="border-color:#7ee787"></div> Enhancement</div>
+  <div class="legend-item"><div class="legend-line dashed" style="border-color:#484f58"></div> Shared domain</div>
+  <div style="font-weight:600;margin:8px 0 6px;color:#f0f6fc">Domains</div>
+  ${allDomains.map(d => `<div class="legend-item"><div class="legend-color" style="background:${DOMAIN_COLORS[d] || '#6b7280'}"></div> ${d}</div>`).join("")}
+`;
+</script>
+</body>
+</html>
