@@ -195,13 +195,15 @@ skill catalog. See `~/Claude/kas-memory/KAS-GALAXY.md` for details.
 
 ## Sandbox Optimization
 
-This skill **cannot use sandbox** for its primary operations (`~/.claude/` path is outside sandbox whitelist `~/Claude/` + `/tmp/`). Use `Bash` to run scripts:
+This skill is **sandbox-optimized**. Batch operations run inside `sandbox_execute`:
 
-- **Catalog extraction**: Run via Bash: `python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — scans all skills, returns structured JSON
-- **Summary generation**: Bash saves full JSON to file, LLM formats the grouped table for the user
+- **Catalog extraction**: Import `scripts/extract_catalog.py` in sandbox to scan all skills and return structured JSON — `~/.claude/` imports are now supported
+- **Summary generation**: Sandbox saves full JSON to `~/Claude/` and returns only the grouped summary (~100 tokens); LLM formats the table for the user
 
-The key principle: **deterministic batch work stays in Bash scripts; presentation
-logic stays with the LLM.** (Sandbox cannot access `~/.claude/` path.)
+Fallback (Bash):
+- `python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — run extraction via Bash when sandbox is unavailable
+
+The key principle: **deterministic batch work → sandbox; presentation logic → LLM.**
 
 ## Continuous Improvement
 
