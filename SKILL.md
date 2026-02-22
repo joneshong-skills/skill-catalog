@@ -27,7 +27,7 @@ explorer (Haiku, maxTurns=10, tools: Read, Grep, Glob)
 
 ### Step 1: Extract Catalog
 
-**Preferred (Sandbox mode)** — extract + summarize in one call, ~99% less context:
+**Primary (Bash mode)** — extract + summarize in one call, ~99% less context:
 
 ```python
 # sandbox_execute (python)
@@ -195,16 +195,13 @@ skill catalog. See `~/Claude/kas-memory/KAS-GALAXY.md` for details.
 
 ## Sandbox Optimization
 
-This skill is **sandbox-optimized**. The extraction + summarization runs inside
-`sandbox_execute`, which means:
+This skill **cannot use sandbox** for its primary operations (`~/.claude/` path is outside sandbox whitelist `~/Claude/` + `/tmp/`). Use `Bash` to run scripts:
 
-- **Full JSON** → saved to file (`~/Claude/skills/skill-catalog/`)
-- **Summary only** → returned to context (~150 tokens vs ~18,400 tokens)
-- **1 tool call** instead of Bash + Read (2 calls)
+- **Catalog extraction**: Run via Bash: `python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — scans all skills, returns structured JSON
+- **Summary generation**: Bash saves full JSON to file, LLM formats the grouped table for the user
 
-The key principle: **deterministic batch work stays in sandbox; presentation
-logic stays with the LLM.** The sandbox extracts and aggregates data, then
-the LLM formats the grouped table for the user.
+The key principle: **deterministic batch work stays in Bash scripts; presentation
+logic stays with the LLM.** (Sandbox cannot access `~/.claude/` path.)
 
 ## Continuous Improvement
 
