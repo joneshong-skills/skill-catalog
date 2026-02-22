@@ -4,34 +4,78 @@ description: >-
   This skill should be used when the user asks to "list all skills", "skill catalog",
   "skill inventory", "show skill overview", "export skill list", "skill 清單",
   "skill 總覽", "列出所有 skill", "匯出 skill 資料", "技能盤點",
-  "visualize skill graph", "interactive skill map", "skill 視覺化",
-  mentions skill cataloging, or discusses exporting structured skill metadata,
-  viewing an interactive skill relationship graph, or generating a skill inventory report.
-version: 0.3.1
-tools: Read, Bash, Glob, Grep
+  mentions skill cataloging, or discusses exporting structured skill metadata
+  or generating a skill inventory report.
+version: 0.5.0
+tools: Read, Bash, Glob, Grep, sandbox_execute
 ---
 
 # Skill Catalog
 
-Extract structured metadata from all installed skills and generate an interactive
-Neo4j-style graph explorer. Produces both a data export (JSON/CSV) and a self-contained
-HTML visualization with D3.js force-directed graph.
+Extract structured metadata from all installed skills and present a clear,
+practical inventory. Produces a JSON/CSV data export and a terminal summary table.
+
+## Agent Delegation
+
+Delegate skill scanning and metadata extraction to `explorer` agent.
+
+```
+explorer (Haiku, maxTurns=10, tools: Read, Grep, Glob)
+```
 
 ## Workflow
 
-### Step 1: Extract Structured Catalog
+### Step 1: Extract Catalog
 
-Run the extraction script to build the catalog:
+**Preferred (Sandbox mode)** — extract + summarize in one call, ~99% less context:
+
+```python
+# sandbox_execute (python)
+import os, sys, json
+from pathlib import Path
+sys.path.insert(0, os.path.expanduser("~/.claude/skills/skill-catalog/scripts"))
+from extract_catalog import extract_skill
+
+skills_dir = Path(os.path.expanduser("~/.claude/skills"))
+guides_dir = skills_dir / "skill-catalog" / "guides"
+catalog = []
+for d in sorted(skills_dir.iterdir()):
+    if not d.is_dir() or d.name.startswith("."):
+        continue
+    entry = extract_skill(d, guides_dir=guides_dir)
+    if entry:
+        catalog.append(entry)
+
+# Save full JSON to file (NOT returned to context)
+out = os.path.expanduser("~/Claude/skills/skill-catalog/skill-catalog.json")
+os.makedirs(os.path.dirname(out), exist_ok=True)
+with open(out, "w") as f:
+    json.dump(catalog, f, indent=2, ensure_ascii=False)
+
+# Group by domain — return only summary
+grouped = {}
+for s in catalog:
+    grouped.setdefault(s["domain"], []).append(
+        {"name": s["name"], "version": s["version"], "tags": s["tags"][:3]})
+output({
+    "total": len(catalog),
+    "domains": {d: len(v) for d, v in sorted(grouped.items(), key=lambda x: -len(x[1]))},
+    "saved_to": out,
+})
+```
+
+**Fallback (Bash)** — when sandbox is unavailable:
 
 ```bash
 python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py \
-  -o ~/Downloads/skill-catalog.json
+  -o ~/Claude/skills/skill-catalog/skill-catalog.json
 ```
 
 Options:
 - `--format csv` for CSV output (default: json)
 - `--skill <name>` for a single skill
 - `--output <path>` to specify output location
+- `--guides-dir <path>` directory containing per-skill guide `.md` files (default: `../guides/`)
 
 Each skill entry contains:
 
@@ -39,85 +83,42 @@ Each skill entry contains:
 |-------|-------------|
 | name | Skill identifier |
 | version | Current version |
-| **domain** | **Primary classification (mutually exclusive, exactly one per skill)** |
-| **tags** | **Cross-cutting labels (multiple per skill, sorted alphabetically)** |
+| **domain** | **Primary classification (exactly one per skill)** |
+| **tags** | **Cross-cutting labels (multiple per skill)** |
+| **composable** | **Can be chained with other skills (pipeline/enhancement)** |
+| **bundled_in** | **Parent skill if this is a sub-skill (e.g., forge bundles brainstorming)** |
 | strengths | Derived capabilities (from tools + domain signals) |
-| pain_point | Purpose statement from the first body paragraph |
-| triggers | Quoted trigger phrases from the description |
+| pain_point | Purpose statement |
+| triggers | Trigger phrases from the description |
 | tools | Declared tool dependencies |
-| body_lines | SKILL.md line count |
-| resources | Script/reference/asset counts |
 
-#### Domain vs Tags
+### Step 2: Present Summary
 
-| Dimension | Cardinality | Purpose |
-|-----------|-------------|---------|
-| **domain** | Exactly 1 | "What domain does this skill belong to?" — used for grouping and filtering |
-| **tags** | 0 to many | "What cross-cutting concerns does it touch?" — used for discovery and search |
+After extraction, present results to the user as a **grouped table by domain**:
 
-Present a summary table to the user after extraction.
+```
+## Skill Inventory (N skills)
 
-### Step 2: Build Relationship Graph
+### Orchestration (2)
+| Skill | Description | Composable | Tags |
+|-------|-------------|------------|------|
+| maestro | Multi-CLI task orchestrator | Yes (bundles: team-tasks) | multi-agent, llm |
+| team-tasks | Agent team coordination | Yes | multi-agent |
 
-Use skill-graph's scanner to generate the edge data:
-
-```bash
-python3 ~/.claude/skills/skill-graph/scripts/scan_skills.py \
-  --json -o ~/Downloads/skill-graph.json
+### Dev Tooling (5)
+...
 ```
 
-This produces nodes, edges (pipeline / enhancement / shares-domain), compositions,
-and graph statistics. The graph data complements the catalog with relationship info.
+Key information to highlight:
+1. **Total count** — how many skills are installed
+2. **By domain** — grouped table with description, composability, tags
+3. **Bundled skills** — which skills are composed inside others (e.g., forge = brainstorming + spec-kit + blueprint + executor + verification)
+4. **File location** — path to the exported JSON/CSV
 
-### Step 3: Generate Interactive Viewer
+If the user wants a different format (xlsx, HTML table, etc.), delegate to the
+appropriate skill (e.g., `/xlsx`) using the catalog JSON as the data source.
 
-Combine catalog and graph data into a self-contained HTML file:
-
-```bash
-python3 ~/.claude/skills/skill-catalog/scripts/generate_viewer.py \
-  --graph ~/Downloads/skill-graph.json \
-  --catalog ~/Downloads/skill-catalog.json \
-  -o ~/Downloads/skill-graph-viewer.html
-```
-
-The viewer provides a Neo4j-style interface:
-- **Force-directed graph** — drag, zoom, pan nodes
-- **Domain color coding** — each domain has a distinct color
-- **Node size** — proportional to connection count
-- **Click node** — detail panel with strengths, triggers, connections
-- **Search** — filter by skill name
-- **Domain filters** — toggle domain pills to focus on subsets
-- **Edge types** — solid (pipeline), dashed green (enhancement), dotted gray (shared domain)
-- **Legend** — edge types and domain colors
-
-Open the HTML file in any browser — no server needed.
-
-### Step 4: Present Results
-
-After generating, provide the user with:
-
-1. **Summary stats** — total skills, edges, compositions, hub skills
-2. **File locations** — paths to catalog JSON, graph JSON, and HTML viewer
-3. **Quick open** — `open ~/Downloads/skill-graph-viewer.html`
-
-If the user wants a specific export format (xlsx, etc.), delegate to the appropriate
-skill (e.g., `/xlsx` for spreadsheet output) using the catalog JSON as the data source.
-
-## Quick Reference
-
-### One-Liner: Full Pipeline
-
-```bash
-python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py -o ~/Downloads/skill-catalog.json && \
-python3 ~/.claude/skills/skill-graph/scripts/scan_skills.py --json -o ~/Downloads/skill-graph.json && \
-python3 ~/.claude/skills/skill-catalog/scripts/generate_viewer.py \
-  --graph ~/Downloads/skill-graph.json \
-  --catalog ~/Downloads/skill-catalog.json \
-  -o ~/Downloads/skill-graph-viewer.html && \
-open ~/Downloads/skill-graph-viewer.html
-```
-
-### Domain Reference (mutually exclusive)
+## Domain Reference
 
 | Domain | Description | Example Skills |
 |--------|-------------|----------------|
@@ -132,86 +133,94 @@ open ~/Downloads/skill-graph-viewer.html
 | skill-meta | Managing skills themselves | create-skill, skill-optimizer, skill-curator, skill-publisher |
 | general | Fallback when no signal matches | (rare) |
 
-Priority: When multiple domain signals match, the domain is chosen by specificity
-(orchestration > dev-tooling > document-output > visual-design > ... > skill-meta).
+## Tag Reference
 
-### Tag Reference (cross-cutting, multiple per skill)
-
-| Tag | Matches when description/pain_point contains |
-|-----|----------------------------------------------|
+| Tag | Matches when description contains |
+|-----|-----------------------------------|
 | browser | browser, playwright, chrome, web page |
-| headless | headless, -p, pipe, programmatic, cron, ci/cd |
+| headless | headless, -p, pipe, programmatic |
 | notebooklm | notebooklm, notebook, audio overview |
 | github | github, git, pull request, pr, repo |
 | mermaid | mermaid, flowchart, sequence diagram |
-| ai-image | image gen, generate an image, grok, dall-e, midjourney, flux, stable diffusion |
-| multi-agent | multi-agent, orchestrate, dispatch, parallel, team, coordinate, pipeline |
-| search | search, research, look up, documentation, query |
-| writing | write, draft, article, blog, copy, content, newsletter |
+| ai-image | image gen, grok, dall-e, midjourney |
+| multi-agent | multi-agent, orchestrate, dispatch, parallel, team |
+| search | search, research, look up, documentation |
+| writing | write, draft, article, blog, copy, content |
 | code | code, debug, review, cli, codex, sdk, mcp |
-| data | csv, xlsx, spreadsheet, data, chart, formula |
-| design | design, ui, ux, frontend, landing page, theme, brand, poster, canvas, visual |
+| data | csv, xlsx, spreadsheet, data, chart |
+| design | design, ui, ux, frontend, landing page, theme |
 | pdf | pdf, merge, split, watermark, ocr |
-| slides | pptx, presentation, slide, deck, pitch |
-| chinese | 繁體, 中文, zh-tw, 台灣 |
+| slides | pptx, presentation, slide, deck |
+| chinese | 繁體, 中文, zh-tw |
 | llm | model, recommend, llm, gpt, claude, gemini |
 | spec | spec, specification, sdd, implementation plan |
-| marketing | marketing, ad copy, competitor, positioning, campaign |
+| marketing | marketing, ad copy, competitor, positioning |
 
-### Domain Color Map
+## Composability Markers
 
-| Domain | Color | Skills |
-|--------|-------|--------|
-| content-creation | Green | marketing-copy, content-writer, ... |
-| document-output | Orange | pdf, docx, pptx, xlsx |
-| visual-design | Purple | diagram-gen, image-gen, canvas-design, frontend-design |
-| dev-tooling | Blue | claude-code-headless, codex-headless, gemini-cli-headless, mcp-builder |
-| orchestration | Teal | maestro, team-tasks |
-| knowledge-mgmt | Yellow | smart-search, notebookllm-mentor, notebook-bridge |
-| skill-meta | Gray | create-skill, skill-optimizer, skill-curator, skill-publisher |
-| analysis | Red | competitive-intel, meeting-insights |
-| ideation | Gold | brainstorming, model-mentor |
+Skills can relate to each other in these ways:
 
-### Viewer Features
+| Relation | Meaning | Example |
+|----------|---------|---------|
+| **pipeline** | Output of A feeds into B | smart-search → content-writer |
+| **enhancement** | B improves A's output | skill-optimizer enhances any skill |
+| **bundled** | A orchestrates B as a sub-step | forge bundles brainstorming, spec-kit, blueprint, executor, verification |
 
-| Feature | How |
-|---------|-----|
-| Zoom | Scroll wheel or pinch |
-| Pan | Click and drag on background |
-| Move node | Click and drag on node |
-| Select node | Click on node or sidebar item |
-| Filter by domain | Click domain pills in sidebar |
-| Search | Type in search box |
-| See connections | Click node → detail panel shows all edges |
-| Navigate | Click connection name in detail panel |
+Mark each skill with:
+- `composable: true/false` — can it be meaningfully chained?
+- `bundled_in: [parent]` — is it a sub-step of a larger skill?
+
+## Guides
+
+Per-skill guides live in `guides/{skill-name}.md`. Template:
+
+```markdown
+# {skill-name}
+
+## When to use
+## When NOT to use (use another skill instead)
+## Core features
+## Common combinations
+```
+
+Guides are embedded into the catalog JSON at extraction time.
+Currently available: `maestro.md`, `team-tasks.md`.
+
+## Note on KAS Galaxy
+
+The 3D galaxy visualization (Knowledge-Attitude-Skill framework) has moved to the
+**KAS Memory** project (`~/Claude/kas-memory/`). It visualizes the broader KAS
+framework including knowledge and attitude dimensions — beyond the scope of this
+skill catalog. See `~/Claude/kas-memory/KAS-GALAXY.md` for details.
+
+## Sandbox Optimization
+
+This skill is **sandbox-optimized**. The extraction + summarization runs inside
+`sandbox_execute`, which means:
+
+- **Full JSON** → saved to file (`~/Claude/skills/skill-catalog/`)
+- **Summary only** → returned to context (~150 tokens vs ~18,400 tokens)
+- **1 tool call** instead of Bash + Read (2 calls)
+
+The key principle: **deterministic batch work stays in sandbox; presentation
+logic stays with the LLM.** The sandbox extracts and aggregates data, then
+the LLM formats the grouped table for the user.
 
 ## Continuous Improvement
 
-This skill evolves with each use. After every invocation:
+After every invocation:
 
-1. **Reflect** — Identify what worked, what caused friction, and any unexpected issues
-2. **Record** — Append a concise lesson to `lessons.md` in this skill's directory
-3. **Refine** — When a pattern recurs (2+ times), update SKILL.md directly
-
-### lessons.md Entry Format
-
-```
-### YYYY-MM-DD — Brief title
-- **Friction**: What went wrong or was suboptimal
-- **Fix**: How it was resolved
-- **Rule**: Generalizable takeaway for future invocations
-```
-
-Accumulated lessons signal when to run `/skill-optimizer` for a deeper structural review.
+1. **Reflect** — What worked, what caused friction
+2. **Record** — Append to `lessons.md`
+3. **Refine** — Update SKILL.md when a pattern recurs (2+ times)
 
 ## Additional Resources
 
 ### Scripts
 - **`scripts/extract_catalog.py`** — Extract structured metadata from all skills.
   Usage: `python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME]`
-- **`scripts/generate_viewer.py`** — Generate interactive HTML graph viewer.
-  Usage: `python3 generate_viewer.py --graph GRAPH_JSON --catalog CATALOG_JSON [-o OUTPUT_HTML]`
 
-### Assets
-- **`assets/viewer-template.html`** — D3.js Neo4j-style graph template.
-  Data is injected at generation time via placeholder replacement.
+### Legacy (archived, not part of current workflow)
+- **`scripts/generate_viewer.py`** — HTML graph viewer generator (superseded by KAS Galaxy)
+- **`assets/viewer-template-3d.html`** — 3D template (moved to KAS Memory scope)
+- **`assets/viewer-template.html`** — Legacy 2D template

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Galaxy — 3D Graph Viewer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #06060f;
+    color: #c8ccd8;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── 3D Canvas ── */
+  #graph-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* ── Top Bar ── */
+  #top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(6, 6, 15, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(100, 120, 200, 0.15);
+  }
+
+  #top-bar h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8b9cf7;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+
+  #search-box {
+    flex: 1;
+    max-width: 320px;
+    padding: 6px 12px;
+    border: 1px solid rgba(100, 120, 200, 0.25);
+    border-radius: 6px;
+    background: rgba(20, 20, 40, 0.8);
+    color: #c8ccd8;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search-box:focus {
+    border-color: rgba(139, 156, 247, 0.6);
+  }
+  #search-box::placeholder { color: #555a70; }
+
+  #stats-bar {
+    font-size: 11px;
+    color: #555a70;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* ── Domain Legend ── */
+  #legend {
+    position: fixed;
+    top: 52px;
+    right: 12px;
+    z-index: 100;
+    background: rgba(6, 6, 15, 0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(100, 120, 200, 0.12);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 160px;
+  }
+
+  #legend h3 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555a70;
+    margin-bottom: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    cursor: pointer;
+    font-size: 11px;
+    transition: opacity 0.2s;
+  }
+  .legend-item:hover { opacity: 1 !important; }
+  .legend-item.dimmed { opacity: 0.3; }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-label { color: #9ca0b0; }
+  .legend-count {
+    margin-left: auto;
+    color: #555a70;
+    font-size: 10px;
+  }
+
+  /* ── Detail Panel ── */
+  #detail-panel {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 100;
+    background: rgba(10, 10, 25, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(100, 120, 200, 0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    max-width: 380px;
+    min-width: 280px;
+    display: none;
+    animation: slideUp 0.25s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  #detail-panel.visible { display: block; }
+
+  #detail-panel .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    cursor: pointer;
+    color: #555a70;
+    font-size: 14px;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  #detail-panel .close-btn:hover { color: #8b9cf7; }
+
+  #detail-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e0e4f0;
+    margin-bottom: 4px;
+  }
+
+  #detail-domain {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  #detail-desc {
+    font-size: 11px;
+    color: #8a8ea0;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    max-height: 60px;
+    overflow-y: auto;
+  }
+
+  #detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(100, 120, 200, 0.12);
+    color: #8b9cf7;
+  }
+
+  #detail-connections {
+    font-size: 11px;
+    color: #6a6e80;
+  }
+
+  #detail-connections strong { color: #9ca0b0; }
+
+  /* ── Controls ── */
+  #controls {
+    position: fixed;
+    bottom: 16px;
+    right: 12px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ctrl-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(100, 120, 200, 0.2);
+    border-radius: 8px;
+    background: rgba(10, 10, 25, 0.85);
+    backdrop-filter: blur(8px);
+    color: #7a7e90;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover {
+    color: #8b9cf7;
+    border-color: rgba(139, 156, 247, 0.4);
+  }
+  .ctrl-btn.active {
+    color: #8b9cf7;
+    background: rgba(139, 156, 247, 0.1);
+    border-color: rgba(139, 156, 247, 0.4);
+  }
+
+  /* ── Tooltip ── */
+  #tooltip {
+    position: fixed;
+    z-index: 200;
+    padding: 4px 8px;
+    background: rgba(20, 20, 40, 0.95);
+    border: 1px solid rgba(100, 120, 200, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    color: #c8ccd8;
+    pointer-events: none;
+    display: none;
+    white-space: nowrap;
+  }
+
+  /* ── Keyboard Hints ── */
+  #hints {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    font-size: 10px;
+    color: #3a3e50;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  kbd {
+    padding: 1px 5px;
+    border: 1px solid #2a2e40;
+    border-radius: 3px;
+    background: rgba(20, 20, 40, 0.5);
+    color: #555a70;
+    font-family: inherit;
+    font-size: 10px;
+  }
+
+  /* ── Guide Drawer ── */
+  #guide-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 90vw;
+    z-index: 150;
+    background: rgba(10, 10, 25, 0.96);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(100, 120, 200, 0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #guide-drawer.open { transform: translateX(0); }
+
+  #guide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(100, 120, 200, 0.15);
+    flex-shrink: 0;
+  }
+  #guide-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8b9cf7;
+  }
+
+  #guide-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c8ccd8;
+  }
+  #guide-body::-webkit-scrollbar { width: 6px; }
+  #guide-body::-webkit-scrollbar-track { background: transparent; }
+  #guide-body::-webkit-scrollbar-thumb { background: rgba(100, 120, 200, 0.2); border-radius: 3px; }
+  #guide-body::-webkit-scrollbar-thumb:hover { background: rgba(100, 120, 200, 0.4); }
+
+  #guide-body h1 { font-size: 18px; color: #e0e4f0; margin: 0 0 12px; font-weight: 700; }
+  #guide-body h2 { font-size: 15px; color: #8b9cf7; margin: 20px 0 8px; font-weight: 600; border-bottom: 1px solid rgba(100,120,200,0.12); padding-bottom: 4px; }
+  #guide-body h3 { font-size: 13px; color: #9ca0b0; margin: 16px 0 6px; font-weight: 600; }
+  #guide-body p { margin-bottom: 10px; }
+  #guide-body ul, #guide-body ol { margin: 0 0 10px 20px; }
+  #guide-body li { margin-bottom: 4px; }
+  #guide-body code { font-family: 'SF Mono', 'Fira Code', monospace; background: rgba(100,120,200,0.1); padding: 1px 5px; border-radius: 3px; font-size: 12px; color: #bd93f9; }
+  #guide-body pre { background: rgba(6,6,15,0.8); border: 1px solid rgba(100,120,200,0.12); border-radius: 6px; padding: 12px; margin: 8px 0 12px; overflow-x: auto; }
+  #guide-body pre code { background: none; padding: 0; color: #c8ccd8; }
+  #guide-body table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 12px; }
+  #guide-body th { text-align: left; padding: 6px 10px; border-bottom: 2px solid rgba(100,120,200,0.2); color: #8b9cf7; font-weight: 600; }
+  #guide-body td { padding: 5px 10px; border-bottom: 1px solid rgba(100,120,200,0.08); }
+  #guide-body blockquote { border-left: 3px solid #8b9cf7; padding-left: 12px; color: #8a8ea0; margin: 8px 0; }
+  #guide-body strong { color: #e0e4f0; }
+  #guide-body a { color: #8b9cf7; text-decoration: none; }
+  #guide-body a:hover { text-decoration: underline; }
+
+  .guide-btn {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 0;
+    border: 1px solid rgba(139, 156, 247, 0.3);
+    border-radius: 6px;
+    background: rgba(139, 156, 247, 0.08);
+    color: #8b9cf7;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .guide-btn:hover {
+    background: rgba(139, 156, 247, 0.15);
+    border-color: rgba(139, 156, 247, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div id="top-bar">
+  <h1>SKILL GALAXY</h1>
+  <input id="search-box" type="text" placeholder="Search skills..." autocomplete="off" spellcheck="false">
+  <span id="stats-bar"></span>
+</div>
+
+<!-- Domain Legend -->
+<div id="legend"></div>
+
+<!-- Detail Panel -->
+<div id="detail-panel">
+  <button class="close-btn" onclick="closeDetail()">&times;</button>
+  <div id="detail-name"></div>
+  <span id="detail-domain"></span>
+  <div id="detail-desc"></div>
+  <div id="detail-tags"></div>
+  <div id="detail-connections"></div>
+  <button id="detail-guide-btn" class="guide-btn" onclick="openGuide()">查看說明書 (G)</button>
+</div>
+
+<!-- Guide Drawer -->
+<div id="guide-drawer">
+  <div id="guide-header">
+    <span id="guide-title"></span>
+    <button class="close-btn" onclick="closeGuide()">&times;</button>
+  </div>
+  <div id="guide-body"></div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <button class="ctrl-btn" id="btn-labels" title="Toggle labels (L)">A</button>
+  <button class="ctrl-btn" id="btn-links" title="Toggle links (K)">&#8212;</button>
+  <button class="ctrl-btn" id="btn-unpin" title="Unpin all (U)">&#8633;</button>
+  <button class="ctrl-btn" id="btn-reset" title="Reset camera (R)">&#8962;</button>
+</div>
+
+<!-- Keyboard Hints -->
+<div id="hints">
+  <kbd>Drag</kbd> rotate &nbsp; <kbd>Scroll</kbd> zoom &nbsp;
+  <kbd>Click</kbd> select &nbsp; <kbd>Drag node</kbd> move &amp; pin &nbsp;
+  <kbd>Dbl-click</kbd> unpin &nbsp; <kbd>R</kbd> reset &nbsp;
+  <kbd>G</kbd> guide
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- 3D Container -->
+<div id="graph-container"></div>
+
+<!-- 3d-force-graph UMD bundles Three.js + d3-force-3d internally -->
+<script src="https://unpkg.com/3d-force-graph@1"></script>
+<script src="https://unpkg.com/marked@14/marked.min.js"></script>
+
+<script>
+// ── Data ──
+const graphData = /*__GRAPH_DATA__*/{nodes:[],edges:[],compositions:[],stats:{}};
+const catalogData = /*__CATALOG_DATA__*/[];
+
+// ── Domain Color Palette ──
+const DOMAIN_COLORS = {
+  'general':          '#6b7fff',
+  'ideation':         '#ff7eb3',
+  'visual-design':    '#ffb86b',
+  'dev-tooling':      '#50fa7b',
+  'analysis':         '#8be9fd',
+  'content-creation': '#ff79c6',
+  'document-output':  '#bd93f9',
+  'orchestration':    '#f1fa8c',
+  'knowledge-mgmt':   '#ff5555',
+  'skill-meta':       '#69ff94',
+};
+const DEFAULT_COLOR = '#5a5e78';
+
+// ── Build catalog lookup ──
+const catalogMap = {};
+catalogData.forEach(c => catalogMap[c.name] = c);
+
+// ── Prepare nodes ──
+const edgeDegree = {};
+graphData.edges.forEach(e => {
+  edgeDegree[e.source] = (edgeDegree[e.source] || 0) + 1;
+  edgeDegree[e.target] = (edgeDegree[e.target] || 0) + 1;
+});
+
+const nodes = graphData.nodes.map(n => {
+  const cat = catalogMap[n.id] || {};
+  const domain = cat.domain || n.domains?.[0] || 'general';
+  const degree = edgeDegree[n.id] || 0;
+  return {
+    id: n.id,
+    domain,
+    color: DOMAIN_COLORS[domain] || DEFAULT_COLOR,
+    val: Math.max(2, Math.min(12, 2 + degree * 0.5)),
+    degree,
+    description: cat.pain_point || n.description || '',
+    triggers: cat.triggers || [],
+    tags: cat.tags || [],
+    strengths: cat.strengths || [],
+    version: n.version || '',
+    guide: cat.guide || '',
+    pinned: false,
+  };
+});
+
+const nodeMap = {};
+nodes.forEach(n => nodeMap[n.id] = n);
+
+// ── Prepare links ──
+const links = graphData.edges
+  .filter(e => nodeMap[e.source] && nodeMap[e.target])
+  .map(e => ({
+    source: e.source,
+    target: e.target,
+    type: e.type,
+    strength: e.strength || 0.5,
+    description: e.description || '',
+  }));
+
+// ── State ──
+let showLabels = true;
+let showLinks = true;
+let highlightNodes = new Set();
+let highlightLinks = new Set();
+let selectedNode = null;
+let activeDomains = new Set(Object.keys(DOMAIN_COLORS));
+
+// ── Build domain groups for clustering ──
+const domainGroups = {};
+nodes.forEach(n => {
+  if (!domainGroups[n.domain]) domainGroups[n.domain] = [];
+  domainGroups[n.domain].push(n);
+});
+
+// ── Initialize 3D Graph ──
+const container = document.getElementById('graph-container');
+
+const Graph = ForceGraph3D()(container)
+  .graphData({ nodes, links })
+  .backgroundColor('#06060f')
+  .showNavInfo(false)
+
+  // ── Node appearance ──
+  .nodeVal(n => n.val)
+  .nodeColor(n => {
+    if (highlightNodes.size > 0 && !highlightNodes.has(n)) return '#1a1a2e';
+    if (!activeDomains.has(n.domain)) return '#1a1a2e';
+    return n.color;
+  })
+  .nodeOpacity(0.9)
+  .nodeResolution(16)
+
+  // ── Node labels (hover tooltip) ──
+  .nodeLabel(n => showLabels
+    ? `<span style="color:${n.color};font-family:SF Mono,Fira Code,monospace;font-size:12px;text-shadow:0 0 4px rgba(0,0,0,0.8)">${n.id}${n.pinned ? ' \ud83d\udccc' : ''}</span>`
+    : ''
+  )
+
+  // ── Link appearance ──
+  .linkWidth(l => {
+    if (!showLinks) return 0;
+    if (highlightLinks.size > 0 && !highlightLinks.has(l)) return 0.1;
+    return l.type === 'pipeline' ? 1.2 : l.type === 'enhancement' ? 0.8 : 0.3;
+  })
+  .linkColor(l => {
+    if (!showLinks) return 'transparent';
+    if (highlightLinks.size > 0 && !highlightLinks.has(l)) return 'rgba(60,60,100,0.08)';
+    switch (l.type) {
+      case 'pipeline': return 'rgba(241, 250, 140, 0.35)';
+      case 'enhancement': return 'rgba(139, 233, 253, 0.3)';
+      default: return 'rgba(100, 120, 200, 0.08)';
+    }
+  })
+  .linkOpacity(1)
+  .linkDirectionalParticles(l => {
+    if (!showLinks) return 0;
+    return (l.type === 'pipeline' && (highlightLinks.size === 0 || highlightLinks.has(l))) ? 2 : 0;
+  })
+  .linkDirectionalParticleWidth(1)
+  .linkDirectionalParticleSpeed(0.005)
+  .linkDirectionalParticleColor(() => 'rgba(241, 250, 140, 0.6)')
+
+  // ── Forces ──
+  .d3AlphaDecay(0.02)
+  .d3VelocityDecay(0.3)
+
+  // ── Interactions ──
+  .onNodeClick(n => selectNode(n))
+  .onNodeDragEnd(n => {
+    n.fx = n.x;
+    n.fy = n.y;
+    n.fz = n.z;
+    n.pinned = true;
+    Graph.nodeColor(Graph.nodeColor()); // refresh visuals
+  })
+  .onBackgroundClick(() => {
+    clearHighlights();
+    closeDetail();
+  });
+
+// ── Custom clustering force ──
+function clusterForce(alpha) {
+  const strength = 0.3;
+  // Compute domain centroids
+  const centroids = {};
+  for (const [domain, group] of Object.entries(domainGroups)) {
+    let cx = 0, cy = 0, cz = 0;
+    group.forEach(n => { cx += n.x || 0; cy += n.y || 0; cz += n.z || 0; });
+    const len = group.length;
+    centroids[domain] = { x: cx / len, y: cy / len, z: cz / len };
+  }
+  // Pull nodes toward their domain centroid
+  nodes.forEach(n => {
+    if (n.pinned) return;
+    const c = centroids[n.domain];
+    if (!c) return;
+    n.vx += (c.x - (n.x || 0)) * strength * alpha;
+    n.vy += (c.y - (n.y || 0)) * strength * alpha;
+    n.vz += (c.z - (n.z || 0)) * strength * alpha;
+  });
+}
+
+// Apply forces after graph initializes
+setTimeout(() => {
+  const fg = Graph.d3Force;
+  fg('link').distance(l => {
+    if (l.type === 'shares-domain') return 60 + (1 - l.strength) * 40;
+    return 30 + (1 - l.strength) * 50;
+  }).strength(l => l.strength * 0.15);
+  fg('charge').strength(-80).distanceMax(300);
+  fg('center').strength(0.05);
+  // Add custom clustering force
+  Graph.d3Force('cluster', clusterForce);
+  Graph.d3ReheatSimulation();
+}, 200);
+
+// ── Double-click to unpin ──
+container.addEventListener('dblclick', () => {
+  if (selectedNode && selectedNode.pinned) {
+    selectedNode.fx = null;
+    selectedNode.fy = null;
+    selectedNode.fz = null;
+    selectedNode.pinned = false;
+    Graph.nodeColor(Graph.nodeColor());
+    Graph.d3ReheatSimulation();
+  }
+});
+
+// ── Node selection & highlight ──
+function selectNode(node) {
+  selectedNode = node;
+  highlightNodes.clear();
+  highlightLinks.clear();
+
+  if (node) {
+    highlightNodes.add(node);
+    links.forEach(l => {
+      const src = typeof l.source === 'object' ? l.source : nodeMap[l.source];
+      const tgt = typeof l.target === 'object' ? l.target : nodeMap[l.target];
+      if (src === node || tgt === node) {
+        highlightNodes.add(src);
+        highlightNodes.add(tgt);
+        highlightLinks.add(l);
+      }
+    });
+    showDetail(node);
+  }
+
+  Graph.nodeColor(Graph.nodeColor());
+  Graph.linkWidth(Graph.linkWidth());
+  Graph.linkColor(Graph.linkColor());
+}
+
+function clearHighlights() {
+  selectedNode = null;
+  highlightNodes.clear();
+  highlightLinks.clear();
+  Graph.nodeColor(Graph.nodeColor());
+  Graph.linkWidth(Graph.linkWidth());
+  Graph.linkColor(Graph.linkColor());
+}
+
+// ── Detail Panel ──
+function showDetail(node) {
+  const panel = document.getElementById('detail-panel');
+  document.getElementById('detail-name').textContent = node.id;
+
+  const domainSpan = document.getElementById('detail-domain');
+  domainSpan.textContent = node.domain;
+  domainSpan.style.background = node.color + '22';
+  domainSpan.style.color = node.color;
+
+  document.getElementById('detail-desc').textContent = node.description;
+
+  const tagsEl = document.getElementById('detail-tags');
+  tagsEl.innerHTML = node.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+  const connCount = links.filter(l => {
+    const src = typeof l.source === 'object' ? l.source.id : l.source;
+    const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+    return src === node.id || tgt === node.id;
+  }).length;
+  document.getElementById('detail-connections').innerHTML =
+    `<strong>${connCount}</strong> connections &bull; v${node.version}` +
+    (node.pinned ? ' &bull; <span style="color:#8b9cf7">pinned</span>' : '');
+
+  // Show guide button only if guide content exists
+  const guideBtn = document.getElementById('detail-guide-btn');
+  if (guideBtn) guideBtn.style.display = node.guide ? 'block' : 'none';
+
+  panel.classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('visible');
+  closeGuide();
+}
+
+function openGuide() {
+  if (!selectedNode || !selectedNode.guide) return;
+  const drawer = document.getElementById('guide-drawer');
+  document.getElementById('guide-title').textContent = selectedNode.id + ' 說明書';
+  document.getElementById('guide-body').innerHTML = marked.parse(selectedNode.guide);
+  drawer.classList.add('open');
+}
+
+function closeGuide() {
+  document.getElementById('guide-drawer').classList.remove('open');
+}
+
+// ── Search ──
+const searchBox = document.getElementById('search-box');
+searchBox.addEventListener('input', () => {
+  const q = searchBox.value.toLowerCase().trim();
+  if (!q) {
+    clearHighlights();
+    return;
+  }
+  highlightNodes.clear();
+  highlightLinks.clear();
+  selectedNode = null;
+
+  nodes.forEach(n => {
+    if (n.id.toLowerCase().includes(q) ||
+        n.domain.toLowerCase().includes(q) ||
+        n.tags.some(t => t.toLowerCase().includes(q)) ||
+        n.description.toLowerCase().includes(q)) {
+      highlightNodes.add(n);
+    }
+  });
+
+  if (highlightNodes.size === 1) {
+    const [node] = highlightNodes;
+    selectNode(node);
+    Graph.cameraPosition(
+      { x: node.x + 100, y: node.y + 50, z: node.z + 100 },
+      { x: node.x, y: node.y, z: node.z },
+      1000
+    );
+  } else {
+    Graph.nodeColor(Graph.nodeColor());
+    Graph.linkWidth(Graph.linkWidth());
+    Graph.linkColor(Graph.linkColor());
+  }
+});
+
+// ── Domain Legend ──
+function buildLegend() {
+  const legend = document.getElementById('legend');
+  const domainCounts = {};
+  nodes.forEach(n => domainCounts[n.domain] = (domainCounts[n.domain] || 0) + 1);
+
+  let html = '<h3>Domains</h3>';
+  for (const [domain, color] of Object.entries(DOMAIN_COLORS)) {
+    const count = domainCounts[domain] || 0;
+    if (count === 0) continue;
+    const dimmed = !activeDomains.has(domain) ? 'dimmed' : '';
+    html += `<div class="legend-item ${dimmed}" data-domain="${domain}">
+      <span class="legend-dot" style="background:${color}"></span>
+      <span class="legend-label">${domain}</span>
+      <span class="legend-count">${count}</span>
+    </div>`;
+  }
+  legend.innerHTML = html;
+
+  legend.querySelectorAll('.legend-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const domain = el.dataset.domain;
+      if (activeDomains.has(domain)) {
+        activeDomains.delete(domain);
+        el.classList.add('dimmed');
+      } else {
+        activeDomains.add(domain);
+        el.classList.remove('dimmed');
+      }
+      Graph.nodeColor(Graph.nodeColor());
+    });
+  });
+}
+buildLegend();
+
+// ── Stats ──
+document.getElementById('stats-bar').textContent =
+  `${nodes.length} skills \u00b7 ${links.length} edges \u00b7 ${Object.keys(domainGroups).length} domains`;
+
+// ── Control Buttons ──
+document.getElementById('btn-labels').addEventListener('click', function() {
+  showLabels = !showLabels;
+  this.classList.toggle('active', showLabels);
+  Graph.nodeColor(Graph.nodeColor());
+});
+document.getElementById('btn-labels').classList.add('active');
+
+document.getElementById('btn-links').addEventListener('click', function() {
+  showLinks = !showLinks;
+  this.classList.toggle('active', showLinks);
+  Graph.linkWidth(Graph.linkWidth());
+  Graph.linkColor(Graph.linkColor());
+});
+document.getElementById('btn-links').classList.add('active');
+
+document.getElementById('btn-unpin').addEventListener('click', () => {
+  nodes.forEach(n => {
+    n.fx = null; n.fy = null; n.fz = null;
+    n.pinned = false;
+  });
+  Graph.nodeColor(Graph.nodeColor());
+  Graph.d3ReheatSimulation();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  Graph.cameraPosition({ x: 0, y: 0, z: 500 }, { x: 0, y: 0, z: 0 }, 1000);
+});
+
+// ── Keyboard Shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.target === searchBox) return;
+  switch (e.key.toLowerCase()) {
+    case 'l':
+      document.getElementById('btn-labels').click();
+      break;
+    case 'k':
+      document.getElementById('btn-links').click();
+      break;
+    case 'u':
+      document.getElementById('btn-unpin').click();
+      break;
+    case 'r':
+      document.getElementById('btn-reset').click();
+      break;
+    case 'g':
+      if (selectedNode && selectedNode.guide) openGuide();
+      break;
+    case 'escape': {
+      const guideDrawer = document.getElementById('guide-drawer');
+      if (guideDrawer.classList.contains('open')) {
+        closeGuide();
+      } else {
+        clearHighlights();
+        closeDetail();
+        searchBox.value = '';
+      }
+      break;
+    }
+    case '/':
+      e.preventDefault();
+      searchBox.focus();
+      break;
+  }
+});
+
+// ── Initial camera position ──
+setTimeout(() => {
+  Graph.cameraPosition({ x: 0, y: 0, z: 450 }, { x: 0, y: 0, z: 0 }, 0);
+}, 100);
+</script>
+
+
+</body>
+</html>

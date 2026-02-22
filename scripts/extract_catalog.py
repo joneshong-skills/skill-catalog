@@ -261,7 +261,7 @@ def derive_strengths(tools: list, scored_domains: dict) -> list:
     return strengths
 
 
-def extract_skill(skill_path: Path):
+def extract_skill(skill_path: Path, guides_dir: Path = None):
     """Extract structured metadata from a single skill."""
     fm = parse_frontmatter(skill_path)
     if not fm:
@@ -288,6 +288,13 @@ def extract_skill(skill_path: Path):
 
     body_lines = len((skill_path / "SKILL.md").read_text(encoding="utf-8").splitlines())
 
+    # Guide content (Traditional Chinese documentation)
+    guide = ""
+    if guides_dir:
+        guide_file = guides_dir / f"{skill_path.name}.md"
+        if guide_file.exists():
+            guide = guide_file.read_text(encoding="utf-8")
+
     return {
         "name": name,
         "version": version,
@@ -303,6 +310,7 @@ def extract_skill(skill_path: Path):
             "references": len(refs),
             "assets": len(assets),
         },
+        "guide": guide,
     }
 
 
@@ -312,9 +320,13 @@ def main():
     parser.add_argument("--output", "-o", help="Output file path")
     parser.add_argument("--format", choices=["json", "csv"], default="json")
     parser.add_argument("--skill", help="Single skill name to extract")
+    parser.add_argument("--guides-dir",
+                        default=str(Path(__file__).parent.parent / "guides"),
+                        help="Directory containing per-skill guide .md files")
     args = parser.parse_args()
 
     skills_path = Path(args.skills_dir)
+    guides_path = Path(args.guides_dir)
     catalog = []
 
     for d in sorted(skills_path.iterdir()):
@@ -322,7 +334,7 @@ def main():
             continue
         if args.skill and d.name != args.skill:
             continue
-        entry = extract_skill(d)
+        entry = extract_skill(d, guides_dir=guides_path)
         if entry:
             catalog.append(entry)
 

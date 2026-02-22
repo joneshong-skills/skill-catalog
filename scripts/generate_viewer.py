@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an interactive Neo4j-style graph viewer as a self-contained HTML file.
+"""Generate an interactive 3D graph viewer as a self-contained HTML file.
 
 Usage:
     python3 generate_viewer.py --graph GRAPH_JSON --catalog CATALOG_JSON --output OUTPUT_HTML
@@ -7,17 +7,19 @@ Usage:
 Inputs:
     --graph:   Output of skill-graph/scripts/scan_skills.py --json
     --catalog: Output of skill-catalog/scripts/extract_catalog.py
-    --output:  Path for the generated HTML file (default: ~/Downloads/skill-graph-viewer.html)
+    --output:  Path for the generated HTML file (default: ~/Claude/skills/skill-catalog/)
 """
 
 import argparse
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
 
-TEMPLATE_PATH = Path(__file__).parent.parent / "assets" / "viewer-template.html"
-DEFAULT_OUTPUT = os.path.expanduser("~/Downloads/skill-graph-viewer.html")
+TEMPLATE_PATH = Path(__file__).parent.parent / "assets" / "viewer-template-3d.html"
+_OUTPUTS_ROOT = os.path.expanduser(os.environ.get("CLAUDE_OUTPUTS_DIR", "~/Claude/skills"))
+DEFAULT_OUTPUT = os.path.join(_OUTPUTS_ROOT, "skill-catalog", f"{date.today().isoformat()}-skill-graph-viewer.html")
 
 
 def main():
@@ -40,10 +42,17 @@ def main():
         node["triggers"] = cat.get("triggers", [])
         node["domain"] = cat.get("domain", "general")
         node["tags"] = cat.get("tags", [])
+        node["guide"] = cat.get("guide", "")
 
-    # Inject data into template
-    html = template.replace("/*__GRAPH_DATA__*/", json.dumps(graph_data, ensure_ascii=False))
-    html = html.replace("/*__CATALOG_DATA__*/", json.dumps(catalog_data, ensure_ascii=False))
+    # Inject data into template (replace placeholder + its default fallback value)
+    html = template.replace(
+        "/*__GRAPH_DATA__*/{nodes:[],edges:[],compositions:[],stats:{}}",
+        json.dumps(graph_data, ensure_ascii=False),
+    )
+    html = html.replace(
+        "/*__CATALOG_DATA__*/[]",
+        json.dumps(catalog_data, ensure_ascii=False),
+    )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
