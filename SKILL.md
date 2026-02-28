@@ -127,7 +127,7 @@ appropriate skill (e.g., `/xlsx`) using the catalog JSON as the data source.
 | document-output | Producing formatted documents | pdf, docx, pptx, xlsx |
 | visual-design | Visual artifacts: diagrams, images, UI | diagram-gen, image-gen, canvas-design, frontend-design |
 | content-creation | Writing and drafting text content | marketing-copy, content-writer |
-| knowledge-mgmt | Research, search, knowledge bases | smart-search, notebookllm-mentor, notebook-bridge |
+| knowledge-mgmt | Research, search, knowledge bases | smart-search, notebookllm, notebook-bridge |
 | analysis | Data/competitor/meeting analysis | competitive-intel, meeting-insights |
 | ideation | Brainstorming, planning, model selection | brainstorming, model-mentor |
 | skill-meta | Managing skills themselves | create-skill, skill-optimizer, skill-curator, skill-publisher |
