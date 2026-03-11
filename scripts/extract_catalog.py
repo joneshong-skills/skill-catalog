@@ -19,6 +19,16 @@ from pathlib import Path
 
 DEFAULT_SKILLS_DIR = os.path.expanduser("~/.claude/skills")
 
+# Import cold-skill description fallback
+sys.path.insert(0, os.path.expanduser("~/.claude/data/skill-index"))
+try:
+    from resolve_description import resolve_from_frontmatter
+except ImportError:
+
+    def resolve_from_frontmatter(fm, name):
+        return fm.get("description", "")
+
+
 # Tool → strength mapping
 TOOL_STRENGTHS = {
     "Bash": "system operations",
@@ -32,27 +42,112 @@ TOOL_STRENGTHS = {
 }
 
 DOMAIN_KEYWORDS = {
-    "content-creation": ["write", "draft", "article", "blog", "copy", "content",
-                         "newsletter", "marketing", "email", "ad copy", "social media"],
-    "document-output": ["pdf", "docx", "pptx", "xlsx", "word", "excel", "powerpoint",
-                        "spreadsheet", "presentation", "slides", "document",
-                        "merge", "split", "watermark"],
-    "visual-design": ["diagram", "image", "canvas", "poster", "visual", "design", "ui",
-                      "ux", "frontend", "landing page", "theme", "brand", "color",
-                      "draw", "art", "render", "infographic", "generate an image"],
-    "dev-tooling": ["headless", "cli", "codex", "gemini", "claude", "mcp", "server",
-                    "script", "pipeline", "ci/cd", "sdk"],
-    "orchestration": ["orchestrate", "dispatch", "multi-agent", "parallel",
-                      "pipeline", "coordinate", "dag", "conductor"],
-    "knowledge-mgmt": ["notebooklm", "notebook", "research", "documentation",
-                       "wiki", "audio overview", "knowledge base"],
-    "skill-meta": ["optimize", "publish", "curate", "organize",
-                   "catalog", "inventory", "metadata", "maintenance", "lifecycle",
-                   "readme", "spec"],
-    "analysis": ["analyze", "competitor", "meeting", "insights", "audit",
-                 "communication", "comparison", "competitive", "intel"],
-    "ideation": ["brainstorm", "ideation", "explore", "decide", "approach",
-                 "recommend"],
+    "content-creation": [
+        "write",
+        "draft",
+        "article",
+        "blog",
+        "copy",
+        "content",
+        "newsletter",
+        "marketing",
+        "email",
+        "ad copy",
+        "social media",
+    ],
+    "document-output": [
+        "pdf",
+        "docx",
+        "pptx",
+        "xlsx",
+        "word",
+        "excel",
+        "powerpoint",
+        "spreadsheet",
+        "presentation",
+        "slides",
+        "document",
+        "merge",
+        "split",
+        "watermark",
+    ],
+    "visual-design": [
+        "diagram",
+        "image",
+        "canvas",
+        "poster",
+        "visual",
+        "design",
+        "ui",
+        "ux",
+        "frontend",
+        "landing page",
+        "theme",
+        "brand",
+        "color",
+        "draw",
+        "art",
+        "render",
+        "infographic",
+        "generate an image",
+    ],
+    "dev-tooling": [
+        "headless",
+        "cli",
+        "codex",
+        "gemini",
+        "claude",
+        "mcp",
+        "server",
+        "script",
+        "pipeline",
+        "ci/cd",
+        "sdk",
+    ],
+    "orchestration": [
+        "orchestrate",
+        "dispatch",
+        "multi-agent",
+        "parallel",
+        "pipeline",
+        "coordinate",
+        "dag",
+        "conductor",
+    ],
+    "knowledge-mgmt": [
+        "notebooklm",
+        "notebook",
+        "research",
+        "documentation",
+        "wiki",
+        "audio overview",
+        "knowledge base",
+    ],
+    "skill-meta": [
+        "optimize",
+        "publish",
+        "curate",
+        "organize",
+        "catalog",
+        "inventory",
+        "metadata",
+        "maintenance",
+        "lifecycle",
+        "readme",
+        "spec",
+    ],
+    "analysis": [
+        "analyze",
+        "competitor",
+        "meeting",
+        "insights",
+        "audit",
+        "communication",
+        "comparison",
+        "competitive",
+        "intel",
+    ],
+    "ideation": ["brainstorm", "ideation", "explore", "decide", "approach", "recommend"],
 }
 
 # --- Domain: mutually exclusive, one per skill ---
@@ -61,33 +156,64 @@ DOMAIN_KEYWORDS = {
 # analysis before knowledge-mgmt (competitive-intel is analysis, not knowledge)
 # skill-meta near end to avoid over-matching
 DOMAIN_PRIORITY = [
-    "orchestration", "dev-tooling", "visual-design", "document-output",
-    "analysis", "content-creation", "knowledge-mgmt", "ideation", "skill-meta",
+    "orchestration",
+    "dev-tooling",
+    "visual-design",
+    "document-output",
+    "analysis",
+    "content-creation",
+    "knowledge-mgmt",
+    "ideation",
+    "skill-meta",
 ]
 
 # --- Tags: cross-cutting, multiple per skill ---
 TAG_KEYWORDS = {
-    "browser":      ["browser", "playwright", "chrome", "web page"],
-    "headless":     ["headless", "-p", "pipe", "programmatic", "cron", "ci/cd"],
-    "notebooklm":   ["notebooklm", "notebook", "audio overview"],
-    "github":       ["github", "git", "pull request", "pr", "repo"],
-    "mermaid":      ["mermaid", "flowchart", "sequence diagram"],
-    "ai-image":     ["image gen", "generate an image", "grok", "dall-e", "midjourney",
-                     "flux", "stable diffusion"],
-    "multi-agent":  ["multi-agent", "orchestrate", "dispatch", "parallel", "team",
-                     "coordinate", "pipeline"],
-    "search":       ["search", "research", "look up", "documentation", "query"],
-    "writing":      ["write", "draft", "article", "blog", "copy", "content", "newsletter"],
-    "code":         ["code", "debug", "review", "cli", "codex", "sdk", "mcp"],
-    "data":         ["csv", "xlsx", "spreadsheet", "data", "chart", "formula"],
-    "design":       ["design", "ui", "ux", "frontend", "landing page", "theme", "brand",
-                     "poster", "canvas", "visual"],
-    "pdf":          ["pdf", "merge", "split", "watermark", "ocr"],
-    "slides":       ["pptx", "presentation", "slide", "deck", "pitch"],
-    "chinese":      ["繁體", "中文", "zh-tw", "台灣"],
-    "llm":          ["model", "recommend", "llm", "gpt", "claude", "gemini"],
-    "spec":         ["spec", "specification", "sdd", "implementation plan"],
-    "marketing":    ["marketing", "ad copy", "competitor", "positioning", "campaign"],
+    "browser": ["browser", "playwright", "chrome", "web page"],
+    "headless": ["headless", "-p", "pipe", "programmatic", "cron", "ci/cd"],
+    "notebooklm": ["notebooklm", "notebook", "audio overview"],
+    "github": ["github", "git", "pull request", "pr", "repo"],
+    "mermaid": ["mermaid", "flowchart", "sequence diagram"],
+    "ai-image": [
+        "image gen",
+        "generate an image",
+        "grok",
+        "dall-e",
+        "midjourney",
+        "flux",
+        "stable diffusion",
+    ],
+    "multi-agent": [
+        "multi-agent",
+        "orchestrate",
+        "dispatch",
+        "parallel",
+        "team",
+        "coordinate",
+        "pipeline",
+    ],
+    "search": ["search", "research", "look up", "documentation", "query"],
+    "writing": ["write", "draft", "article", "blog", "copy", "content", "newsletter"],
+    "code": ["code", "debug", "review", "cli", "codex", "sdk", "mcp"],
+    "data": ["csv", "xlsx", "spreadsheet", "data", "chart", "formula"],
+    "design": [
+        "design",
+        "ui",
+        "ux",
+        "frontend",
+        "landing page",
+        "theme",
+        "brand",
+        "poster",
+        "canvas",
+        "visual",
+    ],
+    "pdf": ["pdf", "merge", "split", "watermark", "ocr"],
+    "slides": ["pptx", "presentation", "slide", "deck", "pitch"],
+    "chinese": ["繁體", "中文", "zh-tw", "台灣"],
+    "llm": ["model", "recommend", "llm", "gpt", "claude", "gemini"],
+    "spec": ["spec", "specification", "sdd", "implementation plan"],
+    "marketing": ["marketing", "ad copy", "competitor", "positioning", "campaign"],
 }
 
 
@@ -268,7 +394,7 @@ def extract_skill(skill_path: Path, guides_dir: Path = None):
         return None
 
     name = fm.get("name", skill_path.name)
-    description = fm.get("description", "")
+    description = resolve_from_frontmatter(fm, skill_path.name)
     tools = [t.strip() for t in fm.get("tools", "").split(",") if t.strip()]
     version = fm.get("version", "")
     triggers = extract_triggers(description)
@@ -282,9 +408,17 @@ def extract_skill(skill_path: Path, guides_dir: Path = None):
     scripts_dir = skill_path / "scripts"
     refs_dir = skill_path / "references"
     assets_dir = skill_path / "assets"
-    scripts = [f for f in scripts_dir.glob("*") if f.name != ".gitkeep"] if scripts_dir.exists() else []
-    refs = [f for f in refs_dir.glob("*") if f.name not in (".gitkeep", "guide.md")] if refs_dir.exists() else []
-    assets = [f for f in assets_dir.glob("*") if f.name != ".gitkeep"] if assets_dir.exists() else []
+    scripts = (
+        [f for f in scripts_dir.glob("*") if f.name != ".gitkeep"] if scripts_dir.exists() else []
+    )
+    refs = (
+        [f for f in refs_dir.glob("*") if f.name not in (".gitkeep", "guide.md")]
+        if refs_dir.exists()
+        else []
+    )
+    assets = (
+        [f for f in assets_dir.glob("*") if f.name != ".gitkeep"] if assets_dir.exists() else []
+    )
 
     body_lines = len((skill_path / "SKILL.md").read_text(encoding="utf-8").splitlines())
 
@@ -320,9 +454,11 @@ def main():
     parser.add_argument("--output", "-o", help="Output file path")
     parser.add_argument("--format", choices=["json", "csv"], default="json")
     parser.add_argument("--skill", help="Single skill name to extract")
-    parser.add_argument("--guides-dir",
-                        default=str(Path(__file__).parent.parent / "guides"),
-                        help="Directory containing per-skill guide .md files")
+    parser.add_argument(
+        "--guides-dir",
+        default=str(Path(__file__).parent.parent / "guides"),
+        help="Directory containing per-skill guide .md files",
+    )
     args = parser.parse_args()
 
     skills_path = Path(args.skills_dir)
@@ -341,23 +477,39 @@ def main():
     if args.format == "csv":
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["name", "version", "domain", "tags", "strengths",
-                         "pain_point", "triggers", "tools",
-                         "body_lines", "scripts", "references", "assets"])
+        writer.writerow(
+            [
+                "name",
+                "version",
+                "domain",
+                "tags",
+                "strengths",
+                "pain_point",
+                "triggers",
+                "tools",
+                "body_lines",
+                "scripts",
+                "references",
+                "assets",
+            ]
+        )
         for e in catalog:
-            writer.writerow([
-                e["name"], e["version"],
-                e["domain"],
-                "; ".join(e["tags"]),
-                "; ".join(e["strengths"]),
-                e["pain_point"],
-                "; ".join(e["triggers"]),
-                "; ".join(e["tools"]),
-                e["body_lines"],
-                e["resources"]["scripts"],
-                e["resources"]["references"],
-                e["resources"]["assets"],
-            ])
+            writer.writerow(
+                [
+                    e["name"],
+                    e["version"],
+                    e["domain"],
+                    "; ".join(e["tags"]),
+                    "; ".join(e["strengths"]),
+                    e["pain_point"],
+                    "; ".join(e["triggers"]),
+                    "; ".join(e["tools"]),
+                    e["body_lines"],
+                    e["resources"]["scripts"],
+                    e["resources"]["references"],
+                    e["resources"]["assets"],
+                ]
+            )
         result = output.getvalue()
     else:
         result = json.dumps(catalog, indent=2, ensure_ascii=False)
