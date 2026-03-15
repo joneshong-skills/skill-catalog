@@ -1,12 +1,7 @@
 ---
 name: skill-catalog
-description: >-
-  This skill should be used when the user asks to "list all skills", "skill catalog",
-  "skill inventory", "show skill overview", "export skill list", "skill 清單",
-  "skill 總覽", "列出所有 skill", "匯出 skill 資料", "技能盤點",
-  mentions skill cataloging, or discusses exporting structured skill metadata
-  or generating a skill inventory report.
-version: 0.5.0
+description: "Skill Catalog"
+version: 0.6.0
 tools: Read, Bash, Glob, Grep, sandbox_execute
 ---
 
@@ -76,6 +71,8 @@ Options:
 - `--skill <name>` for a single skill
 - `--output <path>` to specify output location
 - `--guides-dir <path>` directory containing per-skill guide `.md` files (default: `../guides/`)
+- `--health` for health/quality report
+- `--pipeline` for pipeline compatibility matrix
 
 Each skill entry contains:
 
@@ -83,10 +80,11 @@ Each skill entry contains:
 |-------|-------------|
 | name | Skill identifier |
 | version | Current version |
-| **domain** | **Primary classification (exactly one per skill)** |
+| **domain** | **Primary classification (3-tier: frontmatter > override > keyword)** |
 | **tags** | **Cross-cutting labels (multiple per skill)** |
-| **composable** | **Can be chained with other skills (pipeline/enhancement)** |
-| **bundled_in** | **Parent skill if this is a sub-skill (e.g., forge bundles brainstorming)** |
+| **io_schema** | **MIME-based input/output declaration for pipeline discovery** |
+| **health_score** | **0-100 quality score (version, io, tools, domain, tags, etc.)** |
+| **health_details** | **Per-criterion breakdown with pass/fail and reasons** |
 | strengths | Derived capabilities (from tools + domain signals) |
 | pain_point | Purpose statement |
 | triggers | Trigger phrases from the description |
@@ -118,22 +116,31 @@ Key information to highlight:
 If the user wants a different format (xlsx, HTML table, etc.), delegate to the
 appropriate skill (e.g., `/xlsx`) using the catalog JSON as the data source.
 
-## Domain Reference
+## Domain Reference (14 domains, 0% "general")
 
-| Domain | Description | Example Skills |
-|--------|-------------|----------------|
-| orchestration | Multi-agent/multi-CLI coordination | maestro, team-tasks |
-| dev-tooling | CLI automation, headless execution, MCP | claude-code-headless, codex-headless, mcp-builder |
-| document-output | Producing formatted documents | pdf, docx, pptx, xlsx |
-| visual-design | Visual artifacts: diagrams, images, UI | diagram-gen, image-gen, canvas-design, frontend-design |
-| content-creation | Writing and drafting text content | marketing-copy, content-writer |
-| knowledge-mgmt | Research, search, knowledge bases | smart-search, notebookllm, notebook-bridge |
-| analysis | Data/competitor/meeting analysis | competitive-intel, meeting-insights |
-| ideation | Brainstorming, planning, model selection | brainstorming, model-mentor |
-| skill-meta | Managing skills themselves | create-skill, skill-optimizer, skill-curator, skill-publisher |
-| general | Fallback when no signal matches | (rare) |
+| Domain | Count | Description | Example Skills |
+|--------|-------|-------------|----------------|
+| dev-tooling | 20 | CLI, headless, MCP, git, tmux, specs | claude-code-headless, mcp-builder, blueprint, git-worktrees |
+| workshop-ops | 13 | Workshop module/station management | anvil, sentinel, finance, memvault, envkit |
+| skill-meta | 12 | Managing skills themselves | create-skill, skill-optimizer, skill-curator |
+| visual-design | 11 | Diagrams, images, UI, design | diagram-gen, image-gen, frontend-design, theme-factory |
+| media | 11 | Audio, video, screen, 3D | stt, tts, video-core, screen-record, live3d |
+| content-creation | 6 | Writing and drafting text | content-writer, marketing-copy, readme-gen |
+| analysis | 5 | Data/competitor/meeting analysis | competitive-intel, meeting-insights, cannibalize |
+| debugging | 4 | Debugging, testing, review | four-step-debug, tdd, systematic-debugging |
+| document-output | 4 | Formatted documents | pdf, docx, pptx, xlsx |
+| knowledge-mgmt | 4 | Research, search, knowledge | notebookllm, explain-visual, openclaw-mentor |
+| communication | 4 | Messaging, social, quotes | message-polish, quote-builder, social-content |
+| orchestration | 3 | Multi-agent coordination | forge, maestro, team-tasks |
+| ideation | 3 | Brainstorming, model selection | brainstorming, divergent-thinking, model-mentor |
+| reference | 2 | Embedded reference materials | _ref-review-criteria, _ref-workshop-patterns |
 
-## Tag Reference
+### Domain Classification Precedence
+1. **Frontmatter `domain:`** — explicit declaration in SKILL.md (highest priority)
+2. **DOMAIN_OVERRIDES** — manually curated mapping in extract_catalog.py
+3. **Keyword matching** — fallback based on description + pain_point text
+
+## Tag Reference (21 tags)
 
 | Tag | Matches when description contains |
 |-----|-----------------------------------|
@@ -155,20 +162,45 @@ appropriate skill (e.g., `/xlsx`) using the catalog JSON as the data source.
 | llm | model, recommend, llm, gpt, claude, gemini |
 | spec | spec, specification, sdd, implementation plan |
 | marketing | marketing, ad copy, competitor, positioning |
+| audio | audio, speech, voice, transcription, sound |
+| video | video, screen record, subtitle, caption |
+| workshop | workshop, station, module, sentinel, envkit |
 
-## Composability Markers
+## Health Score (0-100)
 
-Skills can relate to each other in these ways:
+Each skill gets a quality score based on 9 criteria:
 
-| Relation | Meaning | Example |
-|----------|---------|---------|
-| **pipeline** | Output of A feeds into B | smart-search → content-writer |
-| **enhancement** | B improves A's output | skill-optimizer enhances any skill |
-| **bundled** | A orchestrates B as a sub-step | forge bundles brainstorming, spec-kit, blueprint, executor, verification |
+| Criterion | Weight | Description |
+|-----------|--------|-------------|
+| has_version | 10 | Version declared in frontmatter |
+| has_io_schema | 15 | `io:` MIME schema for pipeline discovery |
+| has_tools | 10 | Tools list declared |
+| classified_domain | 15 | Not falling into "general" |
+| has_tags | 10 | At least one tag matched |
+| has_pain_point | 10 | Purpose extracted after H1 |
+| body_lines_ok | 10 | Between 20-500 lines |
+| has_scripts | 10 | Has content in scripts/ |
+| has_guide | 10 | Has guide in guides/ |
 
-Mark each skill with:
-- `composable: true/false` — can it be meaningfully chained?
-- `bundled_in: [parent]` — is it a sub-step of a larger skill?
+Run `--health` to see the full report with distribution, critical skills, and top gaps.
+
+## Pipeline Compatibility (IO Schema)
+
+Skills declaring `io:` in frontmatter enable MIME-based pipeline discovery:
+
+```yaml
+io:
+  input:
+    - mime: "text/markdown"
+      description: "Research query"
+  output:
+    - mime: "application/json"
+      description: "Structured report"
+```
+
+**Rule**: Skill B can follow Skill A if `A.output[].mime ∩ B.input[].mime ≠ ∅`
+
+Run `--pipeline` to see the compatibility matrix and hub analysis.
 
 ## Guides
 
@@ -217,9 +249,4 @@ After every invocation:
 
 ### Scripts
 - **`scripts/extract_catalog.py`** — Extract structured metadata from all skills.
-  Usage: `python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME]`
-
-### Legacy (archived, not part of current workflow)
-- **`scripts/generate_viewer.py`** — HTML graph viewer generator (superseded by KAS Galaxy)
-- **`assets/viewer-template-3d.html`** — 3D template (moved to KAS Memory scope)
-- **`assets/viewer-template.html`** — Legacy 2D template
+  Usage: `python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME] [--health] [--pipeline]`
