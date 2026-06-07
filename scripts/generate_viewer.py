@@ -7,7 +7,7 @@ Usage:
 Inputs:
     --graph:   Output of skill-graph/scripts/scan_skills.py --json
     --catalog: Output of skill-catalog/scripts/extract_catalog.py
-    --output:  Path for the generated HTML file (default: ~/Claude/skills/skill-catalog/)
+    --output:  Path for the generated HTML file (default: ~/workshop/outputs/skill-catalog/)
 """
 
 import argparse
@@ -18,15 +18,29 @@ from datetime import date
 from pathlib import Path
 
 TEMPLATE_PATH = Path(__file__).parent.parent / "assets" / "viewer-template-3d.html"
-_OUTPUTS_ROOT = os.path.expanduser(os.environ.get("CLAUDE_OUTPUTS_DIR", "~/Claude/skills"))
-DEFAULT_OUTPUT = os.path.join(_OUTPUTS_ROOT, "skill-catalog", f"{date.today().isoformat()}-skill-graph-viewer.html")
+_OUTPUTS_ROOT = os.path.expanduser(
+    os.environ.get("CLAUDE_OUTPUTS_DIR", "~/workshop/outputs")
+)
+DEFAULT_OUTPUT = os.path.join(
+    _OUTPUTS_ROOT,
+    "skill-catalog",
+    f"{date.today().isoformat()}-skill-graph-viewer.html",
+)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate interactive skill graph viewer")
-    parser.add_argument("--graph", required=True, help="Graph JSON file (from scan_skills.py)")
-    parser.add_argument("--catalog", required=True, help="Catalog JSON file (from extract_catalog.py)")
-    parser.add_argument("--output", "-o", default=DEFAULT_OUTPUT, help="Output HTML path")
+    parser = argparse.ArgumentParser(
+        description="Generate interactive skill graph viewer"
+    )
+    parser.add_argument(
+        "--graph", required=True, help="Graph JSON file (from scan_skills.py)"
+    )
+    parser.add_argument(
+        "--catalog", required=True, help="Catalog JSON file (from extract_catalog.py)"
+    )
+    parser.add_argument(
+        "--output", "-o", default=DEFAULT_OUTPUT, help="Output HTML path"
+    )
     args = parser.parse_args()
 
     graph_data = json.loads(Path(args.graph).read_text(encoding="utf-8"))

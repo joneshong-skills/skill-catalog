@@ -1,6 +1,6 @@
 ---
 name: skill-catalog
-description: "Skill Catalog"
+description: "skills, catalog, list, show, installed, inventory, health, 列出所有技能, 我有哪些 skill, skill 清單"
 version: 0.6.0
 tools: Read, Bash, Glob, Grep, sandbox_execute
 ---
@@ -42,7 +42,7 @@ for d in sorted(skills_dir.iterdir()):
         catalog.append(entry)
 
 # Save full JSON to file (NOT returned to context)
-out = os.path.expanduser("~/Claude/skills/skill-catalog/skill-catalog.json")
+out = os.path.expanduser("~/workshop/outputs/skill-catalog/skill-catalog.json")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as f:
     json.dump(catalog, f, indent=2, ensure_ascii=False)
@@ -62,8 +62,8 @@ output({
 **Fallback (Bash)** — when sandbox is unavailable:
 
 ```bash
-python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py \
-  -o ~/Claude/skills/skill-catalog/skill-catalog.json
+~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py \
+  -o ~/workshop/outputs/skill-catalog/skill-catalog.json
 ```
 
 Options:
@@ -221,19 +221,19 @@ Currently available: `maestro.md`, `team-tasks.md`.
 ## Note on KAS Galaxy
 
 The 3D galaxy visualization (Knowledge-Attitude-Skill framework) has moved to the
-**KAS Memory** project (`~/Claude/kas-memory/`). It visualizes the broader KAS
+**KAS Memory** project (`~/workshop/outputs/kas-memory/`). It visualizes the broader KAS
 framework including knowledge and attitude dimensions — beyond the scope of this
-skill catalog. See `~/Claude/kas-memory/KAS-GALAXY.md` for details.
+skill catalog. See `~/workshop/outputs/kas-memory/KAS-GALAXY.md` for details.
 
 ## Sandbox Optimization
 
 This skill is **sandbox-optimized**. Batch operations run inside `sandbox_execute`:
 
 - **Catalog extraction**: Import `scripts/extract_catalog.py` in sandbox to scan all skills and return structured JSON — `~/.claude/` imports are now supported
-- **Summary generation**: Sandbox saves full JSON to `~/Claude/` and returns only the grouped summary (~100 tokens); LLM formats the table for the user
+- **Summary generation**: Sandbox saves full JSON to `~/workshop/outputs/` and returns only the grouped summary (~100 tokens); LLM formats the table for the user
 
 Fallback (Bash):
-- `python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — run extraction via Bash when sandbox is unavailable
+- `~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — run extraction via Bash when sandbox is unavailable
 
 The key principle: **deterministic batch work → sandbox; presentation logic → LLM.**
 
@@ -249,4 +249,4 @@ After every invocation:
 
 ### Scripts
 - **`scripts/extract_catalog.py`** — Extract structured metadata from all skills.
-  Usage: `python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME] [--health] [--pipeline]`
+  Usage: `~/.local/bin/python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME] [--health] [--pipeline]`

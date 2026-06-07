@@ -25,7 +25,7 @@
 
 <!-- catalog:start -->
 
-_Auto-generated from registry.json — total 44 skills._
+_Auto-generated from registry.json — total 47 skills._
 
 | Skill | Lifecycle | Sync | Tags | GitHub |
 | --- | --- | --- | --- | --- |
@@ -50,7 +50,7 @@ _Auto-generated from registry.json — total 44 skills._
 | `image-prompt` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/image-prompt) |
 | `intelflow` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/intelflow) |
 | `macos-ui-automation` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/macos-ui-automation) |
-| `maestro` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/maestro) |
+| `maestro` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/maestro) |
 | `memvault` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/memvault) |
 | `message-polish` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/message-polish) |
 | `model-mentor` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/model-mentor) |
@@ -60,10 +60,13 @@ _Auto-generated from registry.json — total 44 skills._
 | `prompt-router` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/prompt-router) |
 | `sandbox-patterns` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/sandbox-patterns) |
 | `session-channel` | `active` | 🔒 local-only | — | — |
-| `skill-catalog` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-catalog) |
+| `skill-catalog` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-catalog) |
 | `skill-curator` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-curator) |
+| `skill-graph` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-graph) |
 | `skill-lifecycle` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-lifecycle) |
 | `skill-optimizer` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-optimizer) |
+| `skill-publisher` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-publisher) |
+| `skill-tester` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-tester) |
 | `smart-search` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/smart-search) |
 | `sync-config` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/sync-config) |
 | `systematic-debugging` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/systematic-debugging) |

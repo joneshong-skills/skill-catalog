@@ -5,6 +5,7 @@ Usage:
     python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv]
     python3 extract_catalog.py --health           # Health report (quality scores)
     python3 extract_catalog.py --pipeline          # Pipeline compatibility matrix
+    python3 extract_catalog.py --dashboard         # Generate interactive HTML dashboard
 
 Output fields per skill:
     name, version, domain, tags, strengths, pain_point, triggers, tools,
@@ -18,6 +19,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 DEFAULT_SKILLS_DIR = os.path.expanduser("~/.claude/skills")
@@ -88,7 +90,7 @@ DOMAIN_OVERRIDES = {
     # dev-tooling
     "claude-code-headless": "dev-tooling",
     "codex-cli-headless": "dev-tooling",
-    "gemini-cli-headless": "dev-tooling",
+    "antigravity-cli-headless": "dev-tooling",
     "mcp-builder": "dev-tooling",
     "git-worktrees": "dev-tooling",
     "github-pm": "dev-tooling",
@@ -434,16 +436,18 @@ TAG_KEYWORDS = {
 }
 
 # Health score weights (total = 100)
+# guide/scripts are bonus — many skills legitimately don't need them
+# io_schema and version are core quality signals
 HEALTH_WEIGHTS = {
-    "has_version": 10,
-    "has_io_schema": 15,
+    "has_version": 15,
+    "has_io_schema": 20,
     "has_tools": 10,
     "classified_domain": 15,
     "has_tags": 10,
     "has_pain_point": 10,
     "body_lines_ok": 10,
-    "has_scripts": 10,
-    "has_guide": 10,
+    "has_scripts": 5,
+    "has_guide": 5,
 }
 
 
@@ -875,7 +879,9 @@ def extract_skill(skill_path: Path, guides_dir: Path = None):
     refs_dir = skill_path / "references"
     assets_dir = skill_path / "assets"
     scripts = (
-        [f for f in scripts_dir.glob("*") if f.name != ".gitkeep"] if scripts_dir.exists() else []
+        [f for f in scripts_dir.glob("*") if f.name != ".gitkeep"]
+        if scripts_dir.exists()
+        else []
     )
     refs = (
         [f for f in refs_dir.glob("*") if f.name not in (".gitkeep", "guide.md")]
@@ -883,7 +889,9 @@ def extract_skill(skill_path: Path, guides_dir: Path = None):
         else []
     )
     assets = (
-        [f for f in assets_dir.glob("*") if f.name != ".gitkeep"] if assets_dir.exists() else []
+        [f for f in assets_dir.glob("*") if f.name != ".gitkeep"]
+        if assets_dir.exists()
+        else []
     )
 
     body_lines = len((skill_path / "SKILL.md").read_text(encoding="utf-8").splitlines())
@@ -974,7 +982,9 @@ def format_health_report(catalog: list) -> str:
                 for k, v in s["health_details"].items()
                 if not v["pass"]
             ]
-            lines.append(f"| {s['name']} | {s['health_score']}/100 | {', '.join(missing)} |")
+            lines.append(
+                f"| {s['name']} | {s['health_score']}/100 | {', '.join(missing)} |"
+            )
         lines.append("")
 
     # Top improvement opportunities (biggest gaps)
@@ -989,7 +999,9 @@ def format_health_report(catalog: list) -> str:
     for gap, count in sorted(gap_counts.items(), key=lambda x: -x[1]):
         pct = count / len(catalog) * 100
         label = gap.replace("has_", "").replace("_", " ")
-        lines.append(f"  - **{label}**: {count}/{len(catalog)} skills ({pct:.0f}%) missing")
+        lines.append(
+            f"  - **{label}**: {count}/{len(catalog)} skills ({pct:.0f}%) missing"
+        )
 
     return "\n".join(lines)
 
@@ -1057,6 +1069,34 @@ def format_pipeline_report(catalog: list) -> str:
     return "\n".join(lines)
 
 
+def generate_dashboard(catalog: list, output_path: str | None = None) -> str:
+    """Generate interactive HTML dashboard with embedded catalog data."""
+    template_path = Path(__file__).parent.parent / "dashboard-template.html"
+    template = template_path.read_text(encoding="utf-8")
+
+    connections = generate_pipeline_matrix(catalog)
+
+    # Strip guide content to reduce HTML size (not needed in dashboard)
+    slim_catalog = []
+    for entry in catalog:
+        slim = {k: v for k, v in entry.items() if k != "guide"}
+        slim_catalog.append(slim)
+
+    catalog_json = json.dumps(slim_catalog, ensure_ascii=False)
+    connections_json = json.dumps(connections, ensure_ascii=False)
+    gen_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    html = template.replace("__CATALOG_JSON__", catalog_json)
+    html = html.replace("__CONNECTIONS_JSON__", connections_json)
+    html = html.replace("__GEN_TIME__", gen_time)
+
+    if not output_path:
+        output_path = str(Path(__file__).parent.parent / "dashboard.html")
+
+    Path(output_path).write_text(html, encoding="utf-8")
+    return output_path
+
+
 # ===== Main =====
 
 
@@ -1067,7 +1107,12 @@ def main():
     parser.add_argument("--format", choices=["json", "csv"], default="json")
     parser.add_argument("--skill", help="Single skill name to extract")
     parser.add_argument("--health", action="store_true", help="Show health report")
-    parser.add_argument("--pipeline", action="store_true", help="Show pipeline compatibility")
+    parser.add_argument(
+        "--pipeline", action="store_true", help="Show pipeline compatibility"
+    )
+    parser.add_argument(
+        "--dashboard", action="store_true", help="Generate interactive HTML dashboard"
+    )
     parser.add_argument(
         "--guides-dir",
         default=str(Path(__file__).parent.parent / "guides"),
@@ -1107,6 +1152,15 @@ def main():
             print(report)
         return
 
+    if args.dashboard:
+        out_path = generate_dashboard(catalog, args.output)
+        print(f"Dashboard generated: {out_path}", file=sys.stderr)
+        # Auto-open in browser
+        import subprocess
+
+        subprocess.run(["open", out_path], check=False)
+        return
+
     # Standard output
     if args.format == "csv":
         output = io.StringIO()
@@ -1131,8 +1185,12 @@ def main():
             ]
         )
         for e in catalog:
-            io_in = "; ".join(x["mime"] for x in e.get("io_schema", {}).get("input", []))
-            io_out = "; ".join(x["mime"] for x in e.get("io_schema", {}).get("output", []))
+            io_in = "; ".join(
+                x["mime"] for x in e.get("io_schema", {}).get("input", [])
+            )
+            io_out = "; ".join(
+                x["mime"] for x in e.get("io_schema", {}).get("output", [])
+            )
             writer.writerow(
                 [
                     e["name"],

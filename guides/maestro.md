@@ -7,7 +7,7 @@
 ## 什麼時候該用？
 
 - 想丟一句話讓系統**全自動**分析 → 路由 → 執行
-- 需要**跨 CLI 協作**（Claude Code + Codex CLI + Gemini CLI）
+- 需要**跨 CLI 協作**（Claude Code + Codex CLI + Antigravity CLI）
 - 大型任務需要拆分成多個子任務平行處理
 - 想比較不同 CLI 對同一任務的輸出品質（Race 模式）
 - 想用最省 token 的方式完成任務（Escalation 模式）
@@ -37,16 +37,16 @@ Maestro 根據任務類型自動選擇最適合的 CLI：
 
 | 任務類型 | 主要 CLI | 省錢 CLI | 最強 CLI |
 |---------|---------|---------|---------|
-| 程式碼生成 | Claude Code | Gemini CLI | Claude Code |
+| 程式碼生成 | Claude Code | Antigravity CLI | Claude Code |
 | Code Review | Claude Code | Codex CLI | Claude Code |
-| 除錯 | Claude Code | Gemini CLI | Claude Code |
+| 除錯 | Claude Code | Antigravity CLI | Claude Code |
 | 重構 | Codex CLI | Codex CLI | Claude Code |
 | 架構設計 | Claude Code | Claude Code | Claude Code |
 | 測試 | Codex CLI | Codex CLI | Claude Code |
-| 長文分析 | Gemini CLI | Gemini CLI | Gemini CLI |
-| 前端 | Claude Code | Gemini CLI | Claude Code |
+| 長文分析 | Antigravity CLI | Antigravity CLI | Antigravity CLI |
+| 前端 | Claude Code | Antigravity CLI | Claude Code |
 | 後端 | Codex CLI | Codex CLI | Claude Code |
-| 研究 | Gemini CLI | Gemini CLI | Gemini CLI |
+| 研究 | Antigravity CLI | Antigravity CLI | Antigravity CLI |
 
 ## 快速範例
 

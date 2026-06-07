@@ -110,5 +110,5 @@ TM="python3 ~/.claude/skills/team-tasks/scripts/task_manager.py"
 ## 常見搭配
 
 - **maestro** → Maestro 內部自動使用 team-tasks 管理任務
-- **claude-code-headless / codex-cli-headless / gemini-cli-headless** → Pipeline 中派發任務給不同 CLI
-- **claude-code-interactive / codex-cli-interactive / gemini-cli-interactive** → 多輪對話任務
+- **claude-code-headless / codex-cli-headless / antigravity-cli-headless** → Pipeline 中派發任務給不同 CLI
+- **claude-code-interactive / codex-cli-interactive / antigravity-cli-interactive** → 多輪對話任務
