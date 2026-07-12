@@ -78,3 +78,27 @@ _Auto-generated from registry.json — total 47 skills._
 | `webcrawl` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/webcrawl) |
 
 <!-- catalog:end -->
+
+---
+
+## Flow Map — 敘事路由（手寫區，marker 之外）
+
+蠶食自 mattpocock `ask-matt` router 手法（2026-07-12）：關鍵字索引抓不到「兩個 skill 看起來很像、但差在 X」的語用區辨，這一區用**敘事**補上。**維護鐵律：新增 / 改名 / 改行為任何下列 skill 時，回來同步這張圖——a stale router is a router that lies。**
+
+### 設計紀律家族（mattpocock 蠶食，2026-07）
+
+**Main flow（idea → build）**：
+
+1. `/grill-me` — 動工前把計劃拷問到共識（無狀態、不寫檔）。底層引擎是 `grilling`（model-invoked primitive，一次一題＋推薦答案＋fact/decision 分工）。
+2. **Branch** — 訪談中領域術語開始定形？→ `domain-modeling` 自動接手：當場寫 CONTEXT.md glossary、三條件全中才記 ADR。
+3. **Branch** — 要設計模組介面/決定 seam？→ `codebase-design`（deep module 詞彙；重大介面用 DESIGN-IT-TWICE 並行競爭設計）。
+4. 動工 — 交回一般實作流（coding-discipline §3 Goal-Driven + §5 Vertical Slice）。
+
+**相鄰區辨（because-clause）**：
+
+- `grill-me` vs `blueprint`：grill 是**動工前把「你要什麼」磨利**（AI 只問不決）；blueprint 是**已知要什麼之後展開執行計劃**。先 grill 後 blueprint。
+- `domain-modeling` vs memvault：前者管**專案的 ubiquitous language 紀律**（CONTEXT.md = glossary and nothing else）；後者管跨 session 記憶。詞彙歸前者，教訓歸後者。
+- `codebase-design` vs coding-discipline §1 The Ladder：正交兩軸——Ladder 問「該不該存在」（YAGNI），codebase-design 問「存在的話介面多深」。
+- `writing-great-skills` — vocabulary underneath：以上所有 skill 的「怎麼寫好 skill」共用詞彙（Predictability 四軸），create-skill / skill-optimizer / skill-curator 的設計基準。
+
+**Follow-up**：本區目前只覆蓋設計紀律家族；全 119-skill 敘事地圖待後續輪次（見 intelflow 蠶食報告）。
