@@ -80,7 +80,7 @@ _Auto-generated from registry.json — total 130 skills._
 | `image-edit` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/image-edit) |
 | `image-gen` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/image-gen) |
 | `image-prompt` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/image-prompt) |
-| `incident-to-guard` | `active` | 📝 draft | — | — |
+| `incident-to-guard` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/incident-to-guard) |
 | `intelflow` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/intelflow) |
 | `iterative-optimize` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/iterative-optimize) |
 | `macos-ui-automation` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/macos-ui-automation) |
@@ -149,7 +149,7 @@ _Auto-generated from registry.json — total 130 skills._
 | `tts` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/tts) |
 | `ui-audit` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/ui-audit) |
 | `verification-before-completion` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/verification-before-completion) |
-| `vhs-demo-gif` | `active` | 📝 draft | — | — |
+| `vhs-demo-gif` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/vhs-demo-gif) |
 | `video-audio` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/video-audio) |
 | `video-core` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/video-core) |
 | `video-edit` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/video-edit) |
