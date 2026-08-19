@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Catalog Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+  --green: #3fb950; --yellow: #d29922; --orange: #db6d28; --red: #f85149;
+  --purple: #bc8cff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+/* Header */
+header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+header h1 { font-size: 24px; font-weight: 600; }
+header h1 span { color: var(--accent); }
+.meta { font-size: 13px; color: var(--text-muted); }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+.kpi .value { font-size: 32px; font-weight: 700; }
+.kpi .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.kpi.green .value { color: var(--green); }
+.kpi.accent .value { color: var(--accent); }
+.kpi.yellow .value { color: var(--yellow); }
+.kpi.red .value { color: var(--red); }
+
+/* Charts Grid */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.chart-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Heatmap */
+.heatmap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+.heatmap-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.heatmap { display: flex; flex-wrap: wrap; gap: 4px; }
+.heatmap-cell { width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; position: relative; }
+.heatmap-cell:hover { transform: scale(1.4); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.heatmap-cell .tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1c2128; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; white-space: nowrap; z-index: 100; pointer-events: none; }
+.heatmap-cell:hover .tooltip { display: block; }
+.tooltip .tt-name { font-weight: 600; color: var(--text); }
+.tooltip .tt-score { color: var(--text-muted); }
+.tooltip .tt-domain { color: var(--accent); font-size: 11px; }
+
+/* Table */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+.table-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.table-controls { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.table-controls input, .table-controls select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; }
+.table-controls input:focus, .table-controls select:focus { border-color: var(--accent); }
+.table-controls input { flex: 1; min-width: 200px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
+th:hover { color: var(--accent); }
+th .sort-arrow { font-size: 10px; margin-left: 4px; }
+td { padding: 8px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(88,166,255,0.04); }
+.score-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 12px; }
+.score-90 { background: rgba(63,185,80,0.15); color: var(--green); }
+.score-70 { background: rgba(88,166,255,0.15); color: var(--accent); }
+.score-50 { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.score-30 { background: rgba(248,81,73,0.15); color: var(--red); }
+.domain-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; background: rgba(188,140,255,0.12); color: var(--purple); margin: 1px; }
+.io-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; background: rgba(63,185,80,0.1); color: var(--green); margin: 1px; }
+.miss-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; background: rgba(248,81,73,0.1); color: var(--red); margin: 1px; }
+.health-bar { display: flex; gap: 2px; }
+.health-dot { width: 8px; height: 8px; border-radius: 2px; }
+.health-dot.pass { background: var(--green); }
+.health-dot.fail { background: var(--border); }
+
+/* Pipeline */
+.pipeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+.pipeline-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pipeline-controls { display: flex; gap: 12px; margin-bottom: 12px; }
+.pipeline-controls select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 13px; }
+.pipeline-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 16px; min-height: 60px; }
+.pipe-node { background: var(--bg); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--accent); cursor: pointer; }
+.pipe-node:hover { background: rgba(88,166,255,0.1); }
+.pipe-node.selected { background: var(--accent); color: var(--bg); }
+.pipe-arrow { color: var(--text-muted); font-size: 18px; }
+.pipe-mime { font-size: 10px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; }
+
+/* Footer */
+footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1><span>Skill</span> Catalog Dashboard</h1>
+  <div class="meta">Generated: <span id="gen-time"></span> | v0.6.0</div>
+</header>
+
+<div class="kpi-row" id="kpi-row"></div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Health Score Distribution</h3>
+    <canvas id="chart-dist" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Domain Distribution</h3>
+    <canvas id="chart-domain" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Improvement Gaps</h3>
+    <canvas id="chart-gaps" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>IO Coverage by Domain</h3>
+    <canvas id="chart-io-domain" height="200"></canvas>
+  </div>
+</div>
+
+<div class="heatmap-card">
+  <h3>Health Heatmap (hover for details)</h3>
+  <div class="heatmap" id="heatmap"></div>
+</div>
+
+<div class="pipeline-card">
+  <h3>Pipeline Explorer</h3>
+  <div class="pipeline-controls">
+    <select id="pipe-source"><option value="">Select source skill...</option></select>
+    <select id="pipe-mime"><option value="">Filter by MIME...</option></select>
+  </div>
+  <div class="pipeline-flow" id="pipeline-flow">
+    <span style="color:var(--text-muted)">Select a source skill to explore pipeline connections</span>
+  </div>
+</div>
+
+<div class="table-card">
+  <h3>All Skills</h3>
+  <div class="table-controls">
+    <input type="text" id="search" placeholder="Search skills...">
+    <select id="filter-domain"><option value="">All Domains</option></select>
+    <select id="filter-score">
+      <option value="">All Scores</option>
+      <option value="90">90-100</option>
+      <option value="70">70-89</option>
+      <option value="50">50-69</option>
+      <option value="0">Below 50</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+    <table id="skill-table">
+      <thead><tr>
+        <th data-col="name">Name <span class="sort-arrow"></span></th>
+        <th data-col="health_score">Score <span class="sort-arrow"></span></th>
+        <th data-col="domain">Domain <span class="sort-arrow"></span></th>
+        <th data-col="version">Ver <span class="sort-arrow"></span></th>
+        <th>Health</th>
+        <th>IO</th>
+        <th data-col="body_lines">Lines <span class="sort-arrow"></span></th>
+        <th>Missing</th>
+      </tr></thead>
+      <tbody id="skill-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Workshop Skill Catalog Dashboard | Data from extract_catalog.py</footer>
+
+</div>
+
+<script>
+// DATA_INJECT_POINT
+const CATALOG = __CATALOG_JSON__;
+const CONNECTIONS = __CONNECTIONS_JSON__;
+const GEN_TIME = "__GEN_TIME__";
+
+document.getElementById('gen-time').textContent = GEN_TIME;
+
+// ===== KPI Cards =====
+const scores = CATALOG.map(s => s.health_score);
+const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+const healthy = scores.filter(s => s >= 70).length;
+const critical = scores.filter(s => s < 40).length;
+const ioCount = CATALOG.filter(s => s.io_schema && (s.io_schema.input?.length || s.io_schema.output?.length)).length;
+
+const kpis = [
+  { value: CATALOG.length, label: 'Total Skills', cls: 'accent' },
+  { value: avg, label: 'Avg Health', cls: avg >= 80 ? 'green' : 'yellow' },
+  { value: healthy, label: 'Healthy (70+)', cls: 'green' },
+  { value: critical, label: 'Critical (<40)', cls: critical > 0 ? 'red' : 'green' },
+  { value: ioCount, label: 'IO Schema', cls: 'accent' },
+  { value: CONNECTIONS.length, label: 'Pipeline Links', cls: 'accent' },
+];
+const kpiRow = document.getElementById('kpi-row');
+kpis.forEach(k => {
+  const d = document.createElement('div');
+  d.className = `kpi ${k.cls}`;
+  d.innerHTML = `<div class="value">${k.value}</div><div class="label">${k.label}</div>`;
+  kpiRow.appendChild(d);
+});
+
+// ===== Charts =====
+const chartColors = {
+  green: 'rgba(63,185,80,0.8)', blue: 'rgba(88,166,255,0.8)',
+  yellow: 'rgba(210,153,34,0.8)', orange: 'rgba(219,109,40,0.8)',
+  red: 'rgba(248,81,73,0.8)', purple: 'rgba(188,140,255,0.8)',
+  cyan: 'rgba(57,211,183,0.8)', pink: 'rgba(219,127,186,0.8)',
+};
+const chartOpts = { responsive: true, plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } }, scales: {} };
+
+// Distribution
+const buckets = { '90-100': 0, '70-89': 0, '50-69': 0, '30-49': 0, '0-29': 0 };
+scores.forEach(s => {
+  if (s >= 90) buckets['90-100']++;
+  else if (s >= 70) buckets['70-89']++;
+  else if (s >= 50) buckets['50-69']++;
+  else if (s >= 30) buckets['30-49']++;
+  else buckets['0-29']++;
+});
+new Chart(document.getElementById('chart-dist'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(buckets),
+    datasets: [{ data: Object.values(buckets),
+      backgroundColor: [chartColors.green, chartColors.blue, chartColors.yellow, chartColors.orange, chartColors.red],
+      borderRadius: 4, borderSkipped: false }]
+  },
+  options: { ...chartOpts, plugins: { legend: { display: false } },
+    scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.5)' } },
+              y: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.5)' } } } }
+});
+
+// Domain distribution
+const domainCounts = {};
+CATALOG.forEach(s => { domainCounts[s.domain] = (domainCounts[s.domain] || 0) + 1; });
+const domainEntries = Object.entries(domainCounts).sort((a,b) => b[1] - a[1]);
+const domColors = [chartColors.blue, chartColors.green, chartColors.purple, chartColors.yellow, chartColors.cyan, chartColors.orange, chartColors.red, chartColors.pink,
+  'rgba(100,150,200,0.8)', 'rgba(150,100,200,0.8)', 'rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)'];
+new Chart(document.getElementById('chart-domain'), {
+  type: 'doughnut',
+  data: { labels: domainEntries.map(d => d[0]), datasets: [{ data: domainEntries.map(d => d[1]), backgroundColor: domColors.slice(0, domainEntries.length), borderWidth: 0 }] },
+  options: { ...chartOpts, cutout: '55%', plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 11 }, padding: 8 } } } }
+});
+
+// Improvement Gaps
+const gapCounts = {};
+CATALOG.forEach(s => {
+  Object.entries(s.health_details).forEach(([k, v]) => {
+    if (!v.pass) gapCounts[k] = (gapCounts[k] || 0) + 1;
+  });
+});
+const gapEntries = Object.entries(gapCounts).sort((a,b) => b[1] - a[1]);
+new Chart(document.getElementById('chart-gaps'), {
+  type: 'bar',
+  data: {
+    labels: gapEntries.map(g => g[0].replace('has_', '').replace('_', ' ')),
+    datasets: [{ data: gapEntries.map(g => g[1]), backgroundColor: chartColors.red, borderRadius: 4, borderSkipped: false }]
+  },
+  options: { ...chartOpts, indexAxis: 'y', plugins: { legend: { display: false } },
+    scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.5)' } },
+              y: { ticks: { color: '#8b949e', font: { size: 11 } }, grid: { display: false } } } }
+});
+
+// IO Coverage by Domain
+const ioByDomain = {};
+CATALOG.forEach(s => {
+  if (!ioByDomain[s.domain]) ioByDomain[s.domain] = { has: 0, total: 0 };
+  ioByDomain[s.domain].total++;
+  if (s.io_schema && (s.io_schema.input?.length || s.io_schema.output?.length)) ioByDomain[s.domain].has++;
+});
+const ioDomEntries = Object.entries(ioByDomain).sort((a,b) => b[1].total - a[1].total);
+new Chart(document.getElementById('chart-io-domain'), {
+  type: 'bar',
+  data: {
+    labels: ioDomEntries.map(d => d[0]),
+    datasets: [
+      { label: 'Has IO', data: ioDomEntries.map(d => d[1].has), backgroundColor: chartColors.green, borderRadius: 4 },
+      { label: 'Missing IO', data: ioDomEntries.map(d => d[1].total - d[1].has), backgroundColor: 'rgba(48,54,61,0.8)', borderRadius: 4 },
+    ]
+  },
+  options: { ...chartOpts, scales: {
+    x: { stacked: true, ticks: { color: '#8b949e', font: { size: 10 }, maxRotation: 45 }, grid: { display: false } },
+    y: { stacked: true, ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.5)' } } },
+    plugins: { legend: { labels: { color: '#8b949e' } } } }
+});
+
+// ===== Heatmap =====
+function scoreColor(s) {
+  if (s >= 90) return 'rgba(63,185,80,0.7)';
+  if (s >= 70) return 'rgba(88,166,255,0.5)';
+  if (s >= 50) return 'rgba(210,153,34,0.5)';
+  if (s >= 30) return 'rgba(219,109,40,0.5)';
+  return 'rgba(248,81,73,0.6)';
+}
+const heatmap = document.getElementById('heatmap');
+const sorted = [...CATALOG].sort((a,b) => a.health_score - b.health_score);
+sorted.forEach(s => {
+  const cell = document.createElement('div');
+  cell.className = 'heatmap-cell';
+  cell.style.background = scoreColor(s.health_score);
+  cell.textContent = s.health_score;
+  const missing = Object.entries(s.health_details).filter(([,v]) => !v.pass).map(([k]) => k.replace('has_','').replace('_',' '));
+  cell.innerHTML = `${s.health_score}<div class="tooltip"><div class="tt-name">${s.name}</div><div class="tt-score">${s.health_score}/100 | v${s.version || '?'}</div><div class="tt-domain">${s.domain}</div>${missing.length ? '<div style="color:#f85149;font-size:11px">Missing: ' + missing.join(', ') + '</div>' : ''}</div>`;
+  heatmap.appendChild(cell);
+});
+
+// ===== Pipeline Explorer =====
+const pipeSource = document.getElementById('pipe-source');
+const pipeMime = document.getElementById('pipe-mime');
+const pipeFlow = document.getElementById('pipeline-flow');
+
+// Populate dropdowns
+const sourceSkills = [...new Set(CONNECTIONS.map(c => c.from))].sort();
+sourceSkills.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; pipeSource.appendChild(o); });
+const mimeTypes = [...new Set(CONNECTIONS.map(c => c.via_mime))].sort();
+mimeTypes.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; pipeMime.appendChild(o); });
+
+function renderPipeline() {
+  const src = pipeSource.value;
+  const mime = pipeMime.value;
+  pipeFlow.innerHTML = '';
+  if (!src) { pipeFlow.innerHTML = '<span style="color:var(--text-muted)">Select a source skill to explore pipeline connections</span>'; return; }
+  let conns = CONNECTIONS.filter(c => c.from === src);
+  if (mime) conns = conns.filter(c => c.via_mime === mime);
+  if (!conns.length) { pipeFlow.innerHTML = '<span style="color:var(--text-muted)">No connections found</span>'; return; }
+
+  // Source node
+  const srcNode = document.createElement('span');
+  srcNode.className = 'pipe-node selected';
+  srcNode.textContent = src;
+  pipeFlow.appendChild(srcNode);
+
+  // Group by mime type
+  const byMime = {};
+  conns.forEach(c => { (byMime[c.via_mime] = byMime[c.via_mime] || []).push(c); });
+
+  Object.entries(byMime).forEach(([m, cs]) => {
+    const arrow = document.createElement('span');
+    arrow.className = 'pipe-arrow';
+    arrow.textContent = '\u2192';
+    pipeFlow.appendChild(arrow);
+
+    const mimeTag = document.createElement('span');
+    mimeTag.className = 'pipe-mime';
+    mimeTag.textContent = m;
+    pipeFlow.appendChild(mimeTag);
+
+    const arrow2 = document.createElement('span');
+    arrow2.className = 'pipe-arrow';
+    arrow2.textContent = '\u2192';
+    pipeFlow.appendChild(arrow2);
+
+    cs.forEach(c => {
+      const node = document.createElement('span');
+      node.className = 'pipe-node';
+      node.textContent = c.to;
+      node.onclick = () => { pipeSource.value = c.to; renderPipeline(); };
+      pipeFlow.appendChild(node);
+    });
+  });
+}
+pipeSource.onchange = renderPipeline;
+pipeMime.onchange = renderPipeline;
+
+// ===== Skill Table =====
+const tbody = document.getElementById('skill-tbody');
+const searchInput = document.getElementById('search');
+const filterDomain = document.getElementById('filter-domain');
+const filterScore = document.getElementById('filter-score');
+
+// Populate domain filter
+domainEntries.forEach(([d]) => { const o = document.createElement('option'); o.value = d; o.textContent = d; filterDomain.appendChild(o); });
+
+let sortCol = 'health_score', sortDir = -1;
+
+function scoreBadgeClass(s) {
+  if (s >= 90) return 'score-90';
+  if (s >= 70) return 'score-70';
+  if (s >= 50) return 'score-50';
+  return 'score-30';
+}
+
+function renderTable() {
+  const q = searchInput.value.toLowerCase();
+  const dom = filterDomain.value;
+  const sc = filterScore.value;
+
+  let filtered = CATALOG.filter(s => {
+    if (q && !s.name.toLowerCase().includes(q) && !(s.tags || []).some(t => t.toLowerCase().includes(q))) return false;
+    if (dom && s.domain !== dom) return false;
+    if (sc) {
+      const min = parseInt(sc);
+      if (min === 90 && s.health_score < 90) return false;
+      if (min === 70 && (s.health_score < 70 || s.health_score >= 90)) return false;
+      if (min === 50 && (s.health_score < 50 || s.health_score >= 70)) return false;
+      if (min === 0 && s.health_score >= 50) return false;
+    }
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb || '').toLowerCase(); }
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+
+  tbody.innerHTML = filtered.map(s => {
+    const ioIn = (s.io_schema?.input || []).map(i => `<span class="io-badge">${i.mime}</span>`).join('');
+    const ioOut = (s.io_schema?.output || []).map(i => `<span class="io-badge">${i.mime}</span>`).join('');
+    const io = ioIn || ioOut ? `${ioIn}${ioIn && ioOut ? ' \u2192 ' : ''}${ioOut}` : '<span style="color:var(--text-muted)">-</span>';
+    const missing = Object.entries(s.health_details).filter(([,v]) => !v.pass).map(([k]) => `<span class="miss-badge">${k.replace('has_','').replace('_',' ')}</span>`).join('');
+    const healthDots = Object.entries(s.health_details).map(([k,v]) => `<span class="health-dot ${v.pass ? 'pass' : 'fail'}" title="${k.replace('has_','').replace('_',' ')}: ${v.pass ? 'pass' : 'fail'}"></span>`).join('');
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="score-badge ${scoreBadgeClass(s.health_score)}">${s.health_score}</span></td>
+      <td><span class="domain-tag">${s.domain}</span></td>
+      <td>${s.version || '-'}</td>
+      <td><div class="health-bar">${healthDots}</div></td>
+      <td>${io}</td>
+      <td>${s.body_lines}</td>
+      <td>${missing || '<span style="color:var(--green)">\u2713</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Table sorting
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.onclick = () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = col === 'health_score' ? -1 : 1; }
+    document.querySelectorAll('th .sort-arrow').forEach(a => a.textContent = '');
+    th.querySelector('.sort-arrow').textContent = sortDir > 0 ? '\u25B2' : '\u25BC';
+    renderTable();
+  };
+});
+
+searchInput.oninput = renderTable;
+filterDomain.onchange = renderTable;
+filterScore.onchange = renderTable;
+
+renderTable();
+</script>
+</body>
+</html>
