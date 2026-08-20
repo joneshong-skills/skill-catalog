@@ -42,7 +42,7 @@ for d in sorted(skills_dir.iterdir()):
         catalog.append(entry)
 
 # Save full JSON to file (NOT returned to context)
-out = os.path.expanduser("~/workshop/outputs/skill-catalog/skill-catalog.json")
+out = os.path.expanduser("~/.claude/outputs/skill-catalog/skill-catalog.json")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as f:
     json.dump(catalog, f, indent=2, ensure_ascii=False)
@@ -63,7 +63,7 @@ output({
 
 ```bash
 ~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py \
-  -o ~/workshop/outputs/skill-catalog/skill-catalog.json
+  -o ~/.claude/outputs/skill-catalog/skill-catalog.json
 ```
 
 Options:
@@ -221,16 +221,16 @@ Currently available: `maestro.md`, `team-tasks.md`.
 ## Note on KAS Galaxy
 
 The 3D galaxy visualization (Knowledge-Attitude-Skill framework) has moved to the
-**KAS Memory** project (`~/workshop/outputs/kas-memory/`). It visualizes the broader KAS
+**KAS Memory** project (`~/.claude/outputs/kas-memory/`). It visualizes the broader KAS
 framework including knowledge and attitude dimensions — beyond the scope of this
-skill catalog. See `~/workshop/outputs/kas-memory/KAS-GALAXY.md` for details.
+skill catalog. See `~/.claude/outputs/kas-memory/KAS-GALAXY.md` for details.
 
 ## Sandbox Optimization
 
 This skill is **sandbox-optimized**. Batch operations run inside `sandbox_execute`:
 
 - **Catalog extraction**: Import `scripts/extract_catalog.py` in sandbox to scan all skills and return structured JSON — `~/.claude/` imports are now supported
-- **Summary generation**: Sandbox saves full JSON to `~/workshop/outputs/` and returns only the grouped summary (~100 tokens); LLM formats the table for the user
+- **Summary generation**: Sandbox saves full JSON to `~/.claude/outputs/` and returns only the grouped summary (~100 tokens); LLM formats the table for the user
 
 Fallback (Bash):
 - `~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — run extraction via Bash when sandbox is unavailable

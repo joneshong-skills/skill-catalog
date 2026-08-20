@@ -7,7 +7,7 @@ Usage:
 Inputs:
     --graph:   Output of skill-graph/scripts/scan_skills.py --json
     --catalog: Output of skill-catalog/scripts/extract_catalog.py
-    --output:  Path for the generated HTML file (default: ~/workshop/outputs/skill-catalog/)
+    --output:  Path for the generated HTML file (default: ~/.claude/outputs/skill-catalog/)
 """
 
 import argparse
@@ -19,7 +19,7 @@ from pathlib import Path
 
 TEMPLATE_PATH = Path(__file__).parent.parent / "assets" / "viewer-template-3d.html"
 _OUTPUTS_ROOT = os.path.expanduser(
-    os.environ.get("CLAUDE_OUTPUTS_DIR", "~/workshop/outputs")
+    os.environ.get("CLAUDE_OUTPUTS_DIR", "~/.claude/outputs")
 )
 DEFAULT_OUTPUT = os.path.join(
     _OUTPUTS_ROOT,
