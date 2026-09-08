@@ -1,6 +1,6 @@
 ---
 name: skill-catalog
-description: "skills, catalog, list, show, installed, inventory, health, 列出所有技能, 我有哪些 skill, skill 清單。找特定用途的 skill 用 /skill-proxy，看 skill 之間怎麼搭配用 /skill-graph，驗證跑不跑得動用 /skill-tester"
+description: "skills, catalog, list, show, installed, inventory, health, 列出所有技能, 我有哪些 skill, skill 清單。找特定用途的 skill 用 /skill-proxy，看 skill 之間怎麼搭配用 /skill-graph"
 version: 0.6.0
 tools: Read, Bash, Glob, Grep, sandbox_execute
 ---
@@ -236,14 +236,6 @@ Fallback (Bash):
 - `~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py` — run extraction via Bash when sandbox is unavailable
 
 The key principle: **deterministic batch work → sandbox; presentation logic → LLM.**
-
-## Continuous Improvement
-
-After every invocation:
-
-1. **Reflect** — What worked, what caused friction
-2. **Record** — Append to `lessons.md`
-3. **Refine** — Update SKILL.md when a pattern recurs (2+ times)
 
 ## Additional Resources
 
