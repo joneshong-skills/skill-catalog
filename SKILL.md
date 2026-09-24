@@ -10,14 +10,6 @@ tools: Read, Bash, Glob, Grep, sandbox_execute
 Extract structured metadata from all installed skills and present a clear,
 practical inventory. Produces a JSON/CSV data export and a terminal summary table.
 
-## Agent Delegation
-
-Delegate skill scanning and metadata extraction to `explorer` agent.
-
-```
-explorer (Haiku, maxTurns=10, tools: Read, Grep, Glob)
-```
-
 ## Workflow
 
 ### Step 1: Extract Catalog
@@ -116,7 +108,7 @@ Key information to highlight:
 If the user wants a different format (xlsx, HTML table, etc.), delegate to the
 appropriate skill (e.g., `/xlsx`) using the catalog JSON as the data source.
 
-## Domain Reference (14 domains, 0% "general")
+## Domain Reference (snapshot — counts and examples drift; Step 1's `domains` summary, or the per-skill `domain` field, is authoritative)
 
 | Domain | Count | Description | Example Skills |
 |--------|-------|-------------|----------------|
@@ -216,14 +208,7 @@ Per-skill guides live in `guides/{skill-name}.md`. Template:
 ```
 
 Guides are embedded into the catalog JSON at extraction time.
-Currently available: `maestro.md`, `team-tasks.md`.
-
-## Note on KAS Galaxy
-
-The 3D galaxy visualization (Knowledge-Attitude-Skill framework) has moved to the
-**KAS Memory** project (`~/.claude/outputs/kas-memory/`). It visualizes the broader KAS
-framework including knowledge and attitude dimensions — beyond the scope of this
-skill catalog. See `~/.claude/outputs/kas-memory/KAS-GALAXY.md` for details.
+List `guides/` for the current set (most installed skills have one).
 
 ## Sandbox Optimization
 
