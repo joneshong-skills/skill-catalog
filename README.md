@@ -14,7 +14,7 @@ Skill Catalog scans `~/.claude/skills/` to produce a complete inventory of insta
 - Outputs JSON, CSV, or formatted terminal table
 - Reports version, tools, argument hints, and descriptions
 - Identifies skills missing required fields
-- Feeds into `skill-graph` for relationship mapping
+- Builds the skill relationship graph and a 3D viewer (`scan_skills.py` + `generate_viewer.py`)
 - Delegates scanning to `explorer` agent for efficiency
 
 ## Usage
@@ -30,7 +30,6 @@ Invoke by asking Claude Code with trigger phrases such as:
 
 ## Related Skills
 
-- [`skill-graph`](https://github.com/joneshong-skills/skill-graph)
 - [`skill-curator`](https://github.com/joneshong-skills/skill-curator)
 - [`skill-lifecycle`](https://github.com/joneshong-skills/skill-lifecycle)
 

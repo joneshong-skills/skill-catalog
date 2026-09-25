@@ -1,6 +1,6 @@
 ---
 name: skill-catalog
-description: "skills, catalog, list, show, installed, inventory, health, 列出所有技能, 我有哪些 skill, skill 清單。找特定用途的 skill 用 /skill-proxy，看 skill 之間怎麼搭配用 /skill-graph"
+description: "skills, catalog, list, show, installed, inventory, health, 列出所有技能, 我有哪些 skill, skill 清單。找特定用途的 skill 用 /skill-proxy；skill 之間的關聯圖也由本 skill 產生（Relationship Graph）"
 version: 0.6.0
 tools: Read, Bash, Glob, Grep, sandbox_execute
 ---
@@ -210,6 +210,20 @@ Per-skill guides live in `guides/{skill-name}.md`. Template:
 Guides are embedded into the catalog JSON at extraction time.
 List `guides/` for the current set (most installed skills have one).
 
+## Relationship Graph
+
+How skills relate (shared triggers, pipelines, compositions) is an interactive 3D viewer built
+from the catalog plus a graph scan. The scan moved here from the retired `skill-graph` skill
+(2026-09-25); edge types are defined in `references/edge-taxonomy.md`.
+
+```bash
+O=~/workshop/outputs/skill-catalog
+~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/extract_catalog.py -o $O/skill-catalog.json
+~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/scan_skills.py --json -o $O/skill-graph.json
+~/.local/bin/python3 ~/.claude/skills/skill-catalog/scripts/generate_viewer.py \
+  --graph $O/skill-graph.json --catalog $O/skill-catalog.json -o $O/skill-graph-viewer.html
+```
+
 ## Sandbox Optimization
 
 This skill is **sandbox-optimized**. Batch operations run inside `sandbox_execute`:
@@ -227,3 +241,6 @@ The key principle: **deterministic batch work → sandbox; presentation logic �
 ### Scripts
 - **`scripts/extract_catalog.py`** — Extract structured metadata from all skills.
   Usage: `~/.local/bin/python3 extract_catalog.py [--skills-dir DIR] [--output FILE] [--format json|csv] [--skill NAME] [--health] [--pipeline]`
+- **`scripts/scan_skills.py`** — Build the skill relationship graph (nodes, edges, compositions).
+  Usage: `~/.local/bin/python3 scan_skills.py [--skills-dir DIR] [--json] [-o FILE]`
+- **`scripts/generate_viewer.py`** — Render the graph and catalog into a self-contained 3D HTML viewer.

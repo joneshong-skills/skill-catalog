@@ -5,7 +5,7 @@ Usage:
     python3 generate_viewer.py --graph GRAPH_JSON --catalog CATALOG_JSON --output OUTPUT_HTML
 
 Inputs:
-    --graph:   Output of skill-graph/scripts/scan_skills.py --json
+    --graph:   Output of scripts/scan_skills.py --json
     --catalog: Output of skill-catalog/scripts/extract_catalog.py
     --output:  Path for the generated HTML file (default: ~/.claude/outputs/skill-catalog/)
 """
