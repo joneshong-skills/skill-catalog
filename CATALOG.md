@@ -118,12 +118,12 @@ _Auto-generated from registry.json — total 118 skills._
 | `session-intelligence` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/session-intelligence) |
 | `session-redactor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/session-redactor) |
 | `show-me-your-work` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-show-me-your-work) |
-| `skill-catalog` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-catalog) |
-| `skill-curator` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-curator) |
+| `skill-catalog` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-catalog) |
+| `skill-curator` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-curator) |
 | `skill-evolver` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-evolver) |
-| `skill-lifecycle` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-lifecycle) |
+| `skill-lifecycle` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-lifecycle) |
 | `skill-optimizer` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-optimizer) |
-| `skill-proxy` | `active` | 📝 draft | meta, proxy, skill-discovery | [link](https://github.com/joneshong-skills/skill-proxy) |
+| `skill-proxy` | `active` | ✅ published | meta, proxy, skill-discovery | [link](https://github.com/joneshong-skills/skill-proxy) |
 | `skill-publisher` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-publisher) |
 | `skill-security-scan` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-security-scan) |
 | `smart-search` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/smart-search) |
