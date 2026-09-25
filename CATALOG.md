@@ -88,7 +88,7 @@ _Auto-generated from registry.json — total 118 skills._
 | `interrogate` | `active` | ✅ published | — | 🔒 private |
 | `macos-ui-automation` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/macos-ui-automation) |
 | `maestro` | `active` | 📝 draft | — | 🔒 private |
-| `mcp-builder` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/mcp-builder) |
+| `mcp-builder` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/mcp-builder) |
 | `media-use` | `active` | 🔒 local-only | — | — |
 | `meetingroom` | `active` | ✅ published | — | 🔒 private |
 | `memvault` | `active` | 📝 draft | — | 🔒 private |
