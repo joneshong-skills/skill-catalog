@@ -31,20 +31,20 @@ _Auto-generated from registry.json — total 118 skills._
 | --- | --- | --- | --- | --- |
 | `_ref-mutation-testing` | `active` | 📝 draft | — | — |
 | `_ref-review-criteria` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/_ref-review-criteria) |
-| `_ref-workshop-patterns` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/_ref-workshop-patterns) |
-| `_ref-writing-structure` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-_ref-writing-structure) |
-| `agent-hatchery` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-agent-hatchery) |
-| `agentctl` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-agentctl) |
-| `anvil` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/anvil) |
-| `blast-radius` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-blast-radius) |
+| `_ref-workshop-patterns` | `active` | 📝 draft | — | 🔒 private |
+| `_ref-writing-structure` | `active` | ✅ published | — | 🔒 private |
+| `agent-hatchery` | `active` | ⚠️ needs-update | — | 🔒 private |
+| `agentctl` | `active` | ⚠️ needs-update | — | 🔒 private |
+| `anvil` | `active` | 📝 draft | — | 🔒 private |
+| `blast-radius` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `blink-builder` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/blink-builder) |
-| `blog-writer` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/blog-writer) |
+| `blog-writer` | `active` | 📝 draft | — | 🔒 private |
 | `blueprint` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/blueprint) |
 | `brainstorming` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/brainstorming) |
 | `browser-routing` | `active` | 📝 draft | — | — |
-| `cannibalize` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/cannibalize) |
-| `capture` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/capture) |
-| `cli-headless` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/claude-skill-cli-headless) |
+| `cannibalize` | `active` | 📝 draft | — | 🔒 private |
+| `capture` | `active` | 📝 draft | — | 🔒 private |
+| `cli-headless` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `code-diet` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/code-diet) |
 | `code-review-interceptor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/code-review-interceptor) |
 | `competitive-intel` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/competitive-intel) |
@@ -56,21 +56,21 @@ _Auto-generated from registry.json — total 118 skills._
 | `create-skill` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/create-skill) |
 | `diagram-gen` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/diagram-gen) |
 | `divergent-thinking` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/divergent-thinking) |
-| `docvault` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/docvault) |
+| `docvault` | `active` | 📝 draft | — | 🔒 private |
 | `docx` | `active` | 📝 draft | — | — |
-| `envkit` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/envkit) |
+| `envkit` | `active` | 📝 draft | — | 🔒 private |
 | `executor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/executor) |
 | `explain-visual` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/explain-visual) |
-| `finance` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/finance) |
-| `fleet` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/fleet) |
+| `finance` | `active` | 📝 draft | — | 🔒 private |
+| `fleet` | `active` | 📝 draft | — | 🔒 private |
 | `forge` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/forge) |
 | `frontend-design` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/frontend-design) |
 | `gemini-research` | `active` | 📝 draft | — | — |
 | `git-worktrees` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/git-worktrees) |
 | `github-pm` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/github-pm) |
-| `goal-prompt` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-goal-prompt) |
-| `grill-me` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-grill-me) |
-| `grilling` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-grilling) |
+| `goal-prompt` | `active` | ⚠️ needs-update | — | 🔒 private |
+| `grill-me` | `active` | ✅ published | — | 🔒 private |
+| `grilling` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `humanizer` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/humanizer) |
 | `hyperframes` | `active` | 🔒 local-only | — | — |
 | `hyperframes-animation` | `active` | 🔒 local-only | — | — |
@@ -84,16 +84,16 @@ _Auto-generated from registry.json — total 118 skills._
 | `image-gen` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/image-gen) |
 | `image-prompt` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/image-prompt) |
 | `incident-to-guard` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/incident-to-guard) |
-| `intelflow` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/intelflow) |
-| `interrogate` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-interrogate) |
+| `intelflow` | `active` | 📝 draft | — | 🔒 private |
+| `interrogate` | `active` | ✅ published | — | 🔒 private |
 | `macos-ui-automation` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/macos-ui-automation) |
-| `maestro` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/maestro) |
+| `maestro` | `active` | 📝 draft | — | 🔒 private |
 | `mcp-builder` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/mcp-builder) |
 | `media-use` | `active` | 🔒 local-only | — | — |
-| `meetingroom` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-meetingroom) |
-| `memvault` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/memvault) |
+| `meetingroom` | `active` | ⚠️ needs-update | — | 🔒 private |
+| `memvault` | `active` | 📝 draft | — | 🔒 private |
 | `message-polish` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/message-polish) |
-| `mjs-prompt` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-mjs-prompt) |
+| `mjs-prompt` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `model-mentor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/model-mentor) |
 | `notebookllm` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/notebookllm) |
 | `notebookllm-visual` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/notebookllm-visual) |
@@ -101,52 +101,52 @@ _Auto-generated from registry.json — total 118 skills._
 | `openclaw-mentor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/openclaw-mentor) |
 | `orca-cli` | `active` | 🔒 local-only | — | — |
 | `orchestration` | `active` | 🔒 local-only | — | — |
-| `over-engineering-audit` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-over-engineering-audit) |
-| `paper-research` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/paper-research) |
+| `over-engineering-audit` | `active` | ✅ published | — | 🔒 private |
+| `paper-research` | `active` | 📝 draft | — | 🔒 private |
 | `pencil-design` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/pencil-design) |
-| `person-intel` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/person-intel) |
-| `photo-edit` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-photo-edit) |
+| `person-intel` | `active` | 📝 draft | — | 🔒 private |
+| `photo-edit` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `plain-speak` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/plain-speak) |
 | `playground` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/playground) |
 | `prompt-router` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/prompt-router) |
 | `quote-consultant` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/quote-consultant) |
-| `repo-map` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-repo-map) |
+| `repo-map` | `active` | ✅ published | — | 🔒 private |
 | `sandbox-patterns` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/sandbox-patterns) |
-| `sentinel` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/sentinel) |
-| `seo-audit` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/seo-audit) |
-| `session-channel` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-session-channel) |
-| `session-intelligence` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/session-intelligence) |
-| `session-redactor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/session-redactor) |
-| `show-me-your-work` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-show-me-your-work) |
+| `sentinel` | `active` | 📝 draft | — | 🔒 private |
+| `seo-audit` | `active` | 📝 draft | — | 🔒 private |
+| `session-channel` | `active` | ✅ published | — | 🔒 private |
+| `session-intelligence` | `active` | 📝 draft | — | 🔒 private |
+| `session-redactor` | `active` | 📝 draft | — | 🔒 private |
+| `show-me-your-work` | `active` | ⚠️ needs-update | — | 🔒 private |
 | `skill-catalog` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-catalog) |
 | `skill-curator` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-curator) |
-| `skill-evolver` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-evolver) |
+| `skill-evolver` | `active` | 📝 draft | — | 🔒 private |
 | `skill-lifecycle` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/skill-lifecycle) |
 | `skill-optimizer` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-optimizer) |
 | `skill-proxy` | `active` | ✅ published | meta, proxy, skill-discovery | [link](https://github.com/joneshong-skills/skill-proxy) |
-| `skill-publisher` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-publisher) |
+| `skill-publisher` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/skill-publisher) |
 | `skill-security-scan` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/skill-security-scan) |
 | `smart-search` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/smart-search) |
 | `spec-kit` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/spec-kit) |
-| `stt` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/stt) |
+| `stt` | `active` | 📝 draft | — | 🔒 private |
 | `sync-config` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/sync-config) |
-| `system-map` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/system-map) |
-| `system-monitor` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/system-monitor) |
+| `system-map` | `active` | 📝 draft | — | 🔒 private |
+| `system-monitor` | `active` | 📝 draft | — | 🔒 private |
 | `systematic-debugging` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/systematic-debugging) |
 | `team-tasks` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/team-tasks) |
 | `tmux-expert` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/tmux-expert) |
-| `tmux-relay` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/tmux-relay) |
-| `tts` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/tts) |
+| `tmux-relay` | `active` | 📝 draft | — | 🔒 private |
+| `tts` | `active` | 📝 draft | — | 🔒 private |
 | `verification-before-completion` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/verification-before-completion) |
 | `vhs-demo-gif` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/vhs-demo-gif) |
-| `video-audio` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/video-audio) |
-| `video-core` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/video-core) |
-| `video-use` | `active` | ⚠️ needs-update | — | [link](https://github.com/browser-use/video-use) |
+| `video-audio` | `active` | 📝 draft | — | 🔒 private |
+| `video-core` | `active` | 📝 draft | — | 🔒 private |
+| `video-use` | `active` | ↩️ upstream | — | — |
 | `web-video-shorts` | `active` | 📝 draft | — | — |
-| `web-video-tutorial` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/web-video-tutorial) |
-| `webcrawl` | `active` | 📝 draft | — | [link](https://github.com/joneshong-skills/webcrawl) |
-| `wizard` | `active` | ✅ published | — | [link](https://github.com/joneshong-skills/cc-skill-wizard) |
-| `writing-great-skills` | `active` | ⚠️ needs-update | — | [link](https://github.com/joneshong-skills/cc-skill-writing-great-skills) |
+| `web-video-tutorial` | `active` | 📝 draft | — | 🔒 private |
+| `webcrawl` | `active` | 📝 draft | — | 🔒 private |
+| `wizard` | `active` | ✅ published | — | 🔒 private |
+| `writing-great-skills` | `active` | ⚠️ needs-update | — | 🔒 private |
 
 <!-- catalog:end -->
 
